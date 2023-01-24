@@ -1008,6 +1008,7 @@ gapfill_state_gaptuple_create(GapFillState *state, int64 time)
 
 	ResetExprContext(state->pi->pi_exprContext);
 	state->pi->pi_exprContext->ecxt_scantuple = slot;
+	ResetExprContext(state->pi->pi_exprContext);
 	return ExecProject(state->pi);
 }
 
