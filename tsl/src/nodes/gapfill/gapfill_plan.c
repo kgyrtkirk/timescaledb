@@ -316,7 +316,7 @@ gapfill_build_pathtarget(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *
 			 * no locf/interpolate or window functions found so we can
 			 * use expression verbatim
 			 */
-			if (i < 2)
+			// if (i < 2)
 			{
 				int asd = 1;
 				add_column_to_pathtarget(pt_path, expr, pt_upper->sortgrouprefs[i]);

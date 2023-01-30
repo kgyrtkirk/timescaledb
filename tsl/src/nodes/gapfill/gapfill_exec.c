@@ -696,7 +696,8 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 
 	state->gapfill_typid = func->funcresulttype;
 	state->state = FETCHED_NONE;
-	state->subslot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
+	state->subslot = MakeSingleTupleTableSlot(tupledesc, &TTSOpsVirtual);
+	// state->subslot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
 	state->scanslot = MakeSingleTupleTableSlot(tupledesc, &TTSOpsVirtual);
 
 	/* bucket_width */
