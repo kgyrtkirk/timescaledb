@@ -20,7 +20,7 @@ SELECT table_name from create_hypertable('test1', 'Time', chunk_time_interval=> 
 
 INSERT INTO test1 SELECT t,  gen_rand_minstd(), gen_rand_minstd(), gen_rand_minstd()::text FROM generate_series('2018-03-02 1:00'::TIMESTAMPTZ, '2018-03-28 1:00', '1 hour') t;
 
-ALTER TABLE test1 set (timescaledb.compress, timescaledb.compress_segmentby = 'b', timescaledb.compress_orderby = '"Time" DESC');
+ALTER TABLE test1 set (timescaledb.compresss, timescaledb.compress_segmentby = 'b', timescaledb.compress_orderby = '"Time" DESC');
 
 SELECT COUNT(*) AS count_compressed
 FROM
@@ -45,7 +45,7 @@ ALTER TABLE test1 ALTER COLUMN b SET STATISTICS 10;
 --test adding boolean columns with default and not null
 CREATE TABLE records (time timestamp NOT NULL);
 SELECT create_hypertable('records', 'time');
-ALTER TABLE records SET (timescaledb.compress = true);
+ALTER TABLE records SET (timescaledb.compresss = true);
 ALTER TABLE records ADD COLUMN col1 boolean DEFAULT false NOT NULL;
 -- NULL constraints are useless and it is safe allow adding this
 -- column with NULL constraint to a compressed hypertable (Issue #5151)
@@ -379,11 +379,11 @@ AS sub;
 
 select add_compression_policy('test1', interval '1 day');
 \set ON_ERROR_STOP 0
-ALTER table test1 set (timescaledb.compress='f');
+ALTER table test1 set (timescaledb.compresss='f');
 \set ON_ERROR_STOP 1
 
 select remove_compression_policy('test1');
-ALTER table test1 set (timescaledb.compress='f');
+ALTER table test1 set (timescaledb.compresss='f');
 
 --only one hypertable left
 SELECT count(*) = 1 FROM _timescaledb_catalog.hypertable hypertable;
@@ -547,5 +547,33 @@ WHERE uc_hypertable.table_name like 'metric' \gset
 -- get definition of compressed hypertable and notice the index
 \d :COMP_SCHEMA_NAME.:COMP_TABLE_NAME
 
+-- #5161 segmentby param
+
+\d test1
+
+CREATE MATERIALIZED VIEW test1_cont_view2
+WITH (timescaledb.continuous,
+      timescaledb.materialized_only=true
+      )
+AS SELECT time_bucket('1 hour', "Time"), SUM(intcol)
+   FROM test1
+   GROUP BY 1 WITH NO DATA;
+
+
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (                              
+  timescaledb.compress = true
+);
+-- ALTER MATERIALIZED VIEW test1_cont_view2 SET (                              
+--   timescaledb.compress = true
+--   timescaledb.compress_segmentby = 'txtcol'
+-- );
+
+-- ALTER MATERIALIZED VIEW test_table_cagg SET (
+--   timescaledb.compress = true,
+--   timescaledb.compress_segmentby = 'txtcol'
+-- );
+
+
 DROP TABLE metric CASCADE;
+select 'ok';
 

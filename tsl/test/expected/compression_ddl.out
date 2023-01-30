@@ -1272,4 +1272,32 @@ Indexes:
 Triggers:
     ts_insert_blocker BEFORE INSERT ON _timescaledb_internal._compressed_hypertable_23 FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker()
 
+-- #5161 segmentby param
+\d test1
+                         Table "public.test1"
+  Column   |           Type           | Collation | Nullable | Default 
+-----------+--------------------------+-----------+----------+---------
+ Time      | timestamp with time zone |           | not null | 
+ intcol    | integer                  |           |          | 
+ bigintcol | bigint                   |           |          | 
+ txtcol    | text                     |           |          | 
+ coli      | integer                  |           |          | 
+ new_colv  | character varying(30)    |           |          | 
+Indexes:
+    "new_index" btree (new_colv)
+    "test1_Time_idx" btree ("Time" DESC)
+Triggers:
+    ts_insert_blocker BEFORE INSERT ON test1 FOR EACH ROW EXECUTE FUNCTION _timescaledb_internal.insert_blocker()
+Number of child tables: 7 (Use \d+ to list them.)
+
+CREATE MATERIALIZED VIEW test1_cont_view2
+WITH (timescaledb.continuous,
+      timescaledb.materialized_only=true
+      )
+AS SELECT time_bucket('1 hour', "Time"), SUM(intcol)
+   FROM test1
+   GROUP BY 1 WITH NO DATA;
+-- SELECT time_bucket('1 hour', "Time"), SUM(intcol)
+--    FROM test1
+--    GROUP BY 1;
 DROP TABLE metric CASCADE;
