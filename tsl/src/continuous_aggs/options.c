@@ -228,7 +228,7 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, bool compress_ena
 		defelems = cagg_get_compression_params(agg, mat_ht);
 
 	DefElem *enable = makeDefElemExtended("timescaledb",
-										  "compresss",
+										  "compress",
 										  compress_enable ? (Node *) makeString("true") :
 															(Node *) makeString("false"),
 										  DEFELEM_UNSPEC,

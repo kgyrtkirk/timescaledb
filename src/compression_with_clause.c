@@ -23,7 +23,7 @@
 
 static const WithClauseDefinition compress_hypertable_with_clause_def[] = {
 		[CompressEnabled] = {
-			.arg_name = "compresss",
+			.arg_name = "compress",
 			.type_id = BOOLOID,
 			.default_val = BoolGetDatum(false),
 		},

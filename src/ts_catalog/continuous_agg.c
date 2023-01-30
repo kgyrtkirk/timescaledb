@@ -59,14 +59,27 @@ static const WithClauseDefinition continuous_aggregate_with_clause_def[] = {
 			.type_id = BOOLOID,
 			.default_val = BoolGetDatum(false),
 		},
-        [ContinuousViewOptionCompress] = {
+		[ContinuousViewOptionCompress] = {
 			.arg_name = "compress",
 			.type_id = BOOLOID,
+			.default_val = BoolGetDatum(false),
 		},
 		[ContinuousViewOptionFinalized] = {
 			.arg_name = "finalized",
 			.type_id = BOOLOID,
 			.default_val = BoolGetDatum(true),
+		},
+		[ContinuousViewOptionCompressSegmentBy] = {
+			 .arg_name = "compress_segmentby",
+			 .type_id = TEXTOID,
+		},
+		[ContinuousViewOptionCompressOrderBy] = {
+			 .arg_name = "compress_orderby",
+			 .type_id = TEXTOID,
+		},
+		[ContinuousViewOptionCompressChunkTimeInterval] = {
+			 .arg_name = "compress_chunk_time_interval",
+			 .type_id = INTERVALOID,
 		},
 };
 
