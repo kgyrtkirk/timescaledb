@@ -682,7 +682,12 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 	 * extract arguments and to align gapfill_start
 	 */
 	FuncExpr *func = linitial(cscan->custom_private);
-	TupleDesc tupledesc = state->csstate.ss.ps.ps_ResultTupleSlot->tts_tupleDescriptor;
+	       TupleDesc x_tupledesc = state->csstate.ss.ps.ps_ResultTupleSlot->tts_tupleDescriptor;
+
+	// TupleDesc tupledesc = state->csstate.ss.ss_currentRelation->rd_att;
+	// TupleDesc subdesc = state->csstate.ss.ps.ps_ExprContext->ecxt_scantuple->tts_tupleDescriptor;
+	TupleDesc tupledesc = x_tupledesc;
+	TupleDesc subdesc = x_tupledesc;
 	List *targetlist = copyObject(state->csstate.ss.ps.plan->targetlist);
 	Node *entry;
 	bool isnull;
@@ -691,7 +696,7 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 
 	state->gapfill_typid = func->funcresulttype;
 	state->state = FETCHED_NONE;
-	state->subslot = MakeSingleTupleTableSlot(tupledesc, &TTSOpsVirtual);
+	state->subslot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
 	state->scanslot = MakeSingleTupleTableSlot(tupledesc, &TTSOpsVirtual);
 
 	/* bucket_width */
@@ -789,13 +794,15 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 			lfirst(list_nth_cell(targetlist, i)) = entry;
 		}
 	}
+	PlanState * st = ExecInitNode(state->subplan, estate, eflags);
+	state->csstate.custom_ps = list_make1(st);
+
 	state->pi = ExecBuildProjectionInfo(targetlist,
 										state->csstate.ss.ps.ps_ExprContext,
 										MakeSingleTupleTableSlot(tupledesc, &TTSOpsVirtual),
 										&state->csstate.ss.ps,
 										NULL);
 
-	state->csstate.custom_ps = list_make1(ExecInitNode(state->subplan, estate, eflags));
 }
 
 /*
@@ -1164,6 +1171,7 @@ gapfill_fetch_next_tuple(GapFillState *state)
 static void
 gapfill_state_initialize_columns(GapFillState *state)
 {
+	// TupleDesc tupledesc = state->csstate.ss.ps.ps_ExprContext->ecxt_scantuple->tts_tupleDescriptor;
 	TupleDesc tupledesc = state->csstate.ss.ps.ps_ResultTupleSlot->tts_tupleDescriptor;
 	CustomScan *cscan = castNode(CustomScan, state->csstate.ss.ps.plan);
 	TargetEntry *tle;
@@ -1332,6 +1340,13 @@ gapfill_aggref_mutator(Node *node, void *context)
 	if (IsA(node, Aggref))
 		return (Node *)
 			makeConst(((Aggref *) node)->aggtype, -1, InvalidOid, -2, (Datum) 0, true, false);
+
+	if (IsA(node, Var)){
+		printf("asd");
+	
+	}
+		// return (Node *)
+		// 	makeConst(((Var *) node)->vartype, -1, InvalidOid, -2, (Datum) 0, true, false);
 
 	return expression_tree_mutator(node, gapfill_aggref_mutator, context);
 }

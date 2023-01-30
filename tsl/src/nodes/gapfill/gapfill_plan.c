@@ -316,8 +316,12 @@ gapfill_build_pathtarget(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *
 			 * no locf/interpolate or window functions found so we can
 			 * use expression verbatim
 			 */
-			add_column_to_pathtarget(pt_path, expr, pt_upper->sortgrouprefs[i]);
-			add_column_to_pathtarget(pt_subpath, expr, pt_upper->sortgrouprefs[i]);
+			if (i < 2)
+			{
+				int asd = 1;
+				add_column_to_pathtarget(pt_path, expr, pt_upper->sortgrouprefs[i]);
+				add_column_to_pathtarget(pt_subpath, expr, pt_upper->sortgrouprefs[i]);
+			}
 		}
 	}
 }
@@ -337,6 +341,7 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 	path = (GapFillPath *) newNode(sizeof(GapFillPath), T_CustomPath);
 	path->cpath.path.pathtype = T_CustomScan;
 	path->cpath.methods = &gapfill_path_methods;
+	
 
 	/*
 	 * parallel_safe must be false because it is not safe to execute this node
@@ -349,6 +354,7 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 	path->cpath.flags = 0;
 	path->cpath.path.pathkeys = subpath->pathkeys;
 
+	// path->cpath.path.pathtarget = subpath->pathtarget;
 	path->cpath.path.pathtarget = create_empty_pathtarget();
 	subpath->pathtarget = create_empty_pathtarget();
 	gapfill_build_pathtarget(root->upper_targets[UPPERREL_FINAL],
