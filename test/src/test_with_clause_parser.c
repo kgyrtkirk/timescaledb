@@ -260,24 +260,3 @@ TS_TEST_FN(ts_test_with_clause_parse)
 	result->i += 1;
 	SRF_RETURN_NEXT(funcctx, HeapTupleGetDatum(tuple));
 }
-
- const WithClauseDefinition continuous_aggregate_with_clause_def[]={};
-extern const WithClauseDefinition compress_hypertable_with_clause_def[];
-
-TS_TEST_FN(ts_test_mv_with_clause_is_superset)
-{
-	Size n_compress = TS_ARRAY_LEN(compress_hypertable_with_clause_def);
-	Size n_cagg = TS_ARRAY_LEN(continuous_aggregate_with_clause_def);
-	for (int i = 0; i < n_compress; i++)
-	{
-		for (int j = 0; j < n_cagg; j++)
-		{
-			if (true)
-			{
-				ereport(ERROR, (errcode(ERRCODE_FEATURE_NOT_SUPPORTED), errmsg("missing stuff")));
-				PG_RETURN_INT32(-1);
-			}
-		}
-	}
-	PG_RETURN_INT32(0);
-}

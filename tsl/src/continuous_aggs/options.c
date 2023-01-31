@@ -218,7 +218,7 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 	return defelems;
 }
 
-/* enable/disable compression on continuous aggregate */
+/* forwards compression related changes via an alter statement to the underlying HT */
 static void
 cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, bool compress_enable)
 {
@@ -245,6 +245,14 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, bool compress_ena
 	tsl_process_compress_table(&alter_cmd, mat_ht, with_clause_options);
 }
 
+// unparses the compression related options into DefElem-s from the given options
+List*
+build_compression_options(WithClauseResult *with_clause_options) {
+	List* list=NIL;
+
+
+	return list;
+}
 void
 continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_options)
 {
@@ -273,6 +281,8 @@ continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_
 		update_materialized_only(agg, materialized_only);
 		ts_cache_release(hcache);
 	}
+	List* compression_options=build_compression_options(with_clause_options);
+
 	if (!with_clause_options[ContinuousViewOptionCompress].is_default)
 	{
 		bool compress_enable =
@@ -294,3 +304,4 @@ continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_
 		elog(ERROR, "cannot alter finalized option for continuous aggregates");
 	}
 }
+
