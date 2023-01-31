@@ -19,6 +19,7 @@ typedef enum CompressHypertableOption
 	CompressSegmentBy,
 	CompressOrderBy,
 	CompressChunkTimeInterval,
+	_CompressOptionMax
 } CompressHypertableOption;
 
 typedef struct

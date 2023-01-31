@@ -3466,7 +3466,6 @@ process_altercontinuousagg_set_with(ContinuousAgg *cagg, Oid view_relid, const L
 	{
 		parse_results = ts_continuous_agg_with_clause_parse(cagg_options);
 		ts_cm_functions->continuous_agg_update_options(cagg, parse_results);
-		// ts_cm_functions->process_compress_table(cmd, ht, parse_results);
 	}
 }
 
