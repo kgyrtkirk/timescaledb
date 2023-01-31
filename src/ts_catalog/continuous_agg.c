@@ -91,8 +91,6 @@ ts_continuous_agg_with_clause_parse(const List *defelems)
 								 TS_ARRAY_LEN(continuous_aggregate_with_clause_def));
 }
 
-extern const WithClauseDefinition compress_hypertable_with_clause_def[];
-
 Node *
 unparse_value(Oid oid, Datum parsed)
 ;
@@ -101,7 +99,7 @@ Node *
 unparse_value(Oid oid, Datum parsed)
 {
 	if (!OidIsValid(oid))
-		elog(ERROR, "Argument \"%s\" has invalid Oid!", oid);
+		elog(ERROR, "Argument \"%d\" has invalid Oid!", oid);
 
 	switch (oid)
 	{
@@ -113,17 +111,15 @@ unparse_value(Oid oid, Datum parsed)
 		case INTERVALOID:
 		case TEXTOID:
 		{
-			char *value;
-			Datum val;
 			Oid in_fn;
-			Oid typIOParam;
+			bool typIsVarlena;
 
-			getTypeOutputInfo(oid, &in_fn, &typIOParam);
+			getTypeOutputInfo(oid, &in_fn, &typIsVarlena);
 
 			Assert(OidIsValid(in_fn));
 
 			char *val = OidOutputFunctionCall(in_fn, parsed);
-			return makeString(val);
+			return (Node*)makeString(val);
 		}
 
 		default:
@@ -142,20 +138,21 @@ cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
 
 	for (int i = 0; i < _CompressOptionMax; i++)
 	{
-		WithClauseResult *input = NIL;
+
+		int option_index=0;
 		switch (i)
 		{
 			case CompressEnabled:
-				input = &with_clauses[ContinuousViewOptionCompress];
+				option_index=ContinuousViewOptionCompress;
 				break;
 			case CompressSegmentBy:
-				input = &with_clauses[ContinuousViewOptionCompressSegmentBy];
+				option_index=ContinuousViewOptionCompressSegmentBy;
 				break;
 			case CompressOrderBy:
-				input = &with_clauses[ContinuousViewOptionCompressOrderBy];
+				option_index=ContinuousViewOptionCompressOrderBy;
 				break;
 			case CompressChunkTimeInterval:
-				input = &with_clauses[ContinuousViewOptionCompressChunkTimeInterval];
+				option_index=ContinuousViewOptionCompressChunkTimeInterval;
 				break;
 			default:
 				ereport(ERROR,
@@ -163,16 +160,18 @@ cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
 				break;
 		}
 
+		const WithClauseResult *input = &with_clauses[option_index];
+		WithClauseDefinition def = continuous_aggregate_with_clause_def[option_index];
+
 		if (!input->is_default)
 		{
-			WithClauseDefinition def = compress_hypertable_with_clause_def[i];
 			Node *value = unparse_value(def.type_id, input->parsed);
 			DefElem *elem = makeDefElemExtended("timescaledb",
-												compress_hypertable_with_clause_def[i].arg_name,
+												(char*)def.arg_name,
 												value,
 												DEFELEM_UNSPEC,
 												-1);
-			lappend(ret, elem);
+			ret=lappend(ret, elem);
 		}
 	}
 	return ret;

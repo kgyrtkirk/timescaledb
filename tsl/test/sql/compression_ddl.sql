@@ -555,9 +555,9 @@ CREATE MATERIALIZED VIEW test1_cont_view2
 WITH (timescaledb.continuous,
       timescaledb.materialized_only=true
       )
-AS SELECT time_bucket('1 hour', "Time"), SUM(intcol)
+AS SELECT time_bucket('1 hour', "Time") as t, SUM(intcol) as sum,txtcol
    FROM test1
-   GROUP BY 1 WITH NO DATA;
+   GROUP BY 1,txtcol WITH NO DATA;
 
 
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (                              
