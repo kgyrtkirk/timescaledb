@@ -95,7 +95,14 @@ extern const WithClauseDefinition compress_hypertable_with_clause_def[];
 
 Node *
 unparse_value(Oid oid, Datum parsed)
+;
+
+Node *
+unparse_value(Oid oid, Datum parsed)
 {
+	if (!OidIsValid(oid))
+		elog(ERROR, "Argument \"%s\" has invalid Oid!", oid);
+
 	switch (oid)
 	{
 		case BOOLOID:
@@ -105,7 +112,19 @@ unparse_value(Oid oid, Datum parsed)
 				return (Node *) makeString("false");
 		case INTERVALOID:
 		case TEXTOID:
-			return DatumGetCString(parsed);
+		{
+			char *value;
+			Datum val;
+			Oid in_fn;
+			Oid typIOParam;
+
+			getTypeOutputInfo(oid, &in_fn, &typIOParam);
+
+			Assert(OidIsValid(in_fn));
+
+			char *val = OidOutputFunctionCall(in_fn, parsed);
+			return makeString(val);
+		}
 
 		default:
 			ereport(ERROR,
@@ -148,12 +167,12 @@ cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
 		{
 			WithClauseDefinition def = compress_hypertable_with_clause_def[i];
 			Node *value = unparse_value(def.type_id, input->parsed);
-			DefElem *enable = makeDefElemExtended("timescaledb",
-												  compress_hypertable_with_clause_def[i].arg_name,
-												  value,
-												  DEFELEM_UNSPEC,
-												  -1);
-			lappend(ret, )
+			DefElem *elem = makeDefElemExtended("timescaledb",
+												compress_hypertable_with_clause_def[i].arg_name,
+												value,
+												DEFELEM_UNSPEC,
+												-1);
+			lappend(ret, elem);
 		}
 	}
 	return ret;

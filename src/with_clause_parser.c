@@ -55,7 +55,6 @@ ts_with_clause_filter(const List *def_elems, List **within_namespace, List **not
 }
 
 static Datum parse_arg(WithClauseDefinition arg, DefElem *def);
-static Node* unparse_arg(WithClauseDefinition arg, Datum *datum);
 
 /*
  * Deserialize and apply the values in a WITH clause based on the on_arg table.
@@ -167,34 +166,4 @@ parse_arg(WithClauseDefinition arg, DefElem *def)
 	}
 	PG_END_TRY();
 	return val;
-}
-
-static Node*
-unparse_arg(WithClauseDefinition arg, Datum *datum)
-{
-	char *value;
-	Datum val;
-	Oid in_fn;
-	Oid typIOParam;
-
-	if (!OidIsValid(arg.type_id))
-		elog(ERROR, "Argument \"%s\" has invalid Oid!", arg.arg_name);
-
-	// if (def->arg != NULL)
-	// 	value = defGetString(def);
-	// else if (arg.type_id == BOOLOID)
-	// 	/* for booleans, postgres defines the option timescale.foo to be the same as
-	// 	 * timescaledb.foo='true' so if no value is found set it to "true" here */
-	// 	value = "true";
-	// else
-	// 	ereport(ERROR,
-	// 			(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-	// 			 errmsg("parameter \"%s.%s\" must have a value", def->defnamespace, def->defname)));
-
-	getTypeOutputInfo(arg.type_id, &in_fn, &typIOParam);
-
-	Assert(OidIsValid(in_fn));
-
-	char* val = OidOutputFunctionCall(in_fn, datum);
-	return makeString(val);
 }
