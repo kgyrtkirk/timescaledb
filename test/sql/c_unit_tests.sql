@@ -12,9 +12,6 @@ AS :MODULE_PATHNAME, 'ts_test_interval_to_internal_conversion' LANGUAGE C VOLATI
 CREATE OR REPLACE FUNCTION test.adts() RETURNS VOID
 AS :MODULE_PATHNAME, 'ts_test_adts' LANGUAGE C VOLATILE;
 
-CREATE OR REPLACE FUNCTION test.ts_test_mv_with_clause_is_superset() RETURNS INT
-AS :MODULE_PATHNAME, 'ts_test_mv_with_clause_is_superset' LANGUAGE C VOLATILE;
-
 CREATE OR REPLACE FUNCTION test.time_utils() RETURNS VOID
 AS :MODULE_PATHNAME, 'ts_test_time_utils' LANGUAGE C;
 SET ROLE :ROLE_DEFAULT_PERM_USER;
@@ -23,4 +20,3 @@ SELECT test.time_to_internal_conversion();
 SELECT test.interval_to_internal_conversion();
 SELECT test.adts();
 SELECT test.time_utils();
-SELECT test.ts_test_mv_with_clause_is_superset();
