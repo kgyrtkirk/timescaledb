@@ -245,7 +245,7 @@ select create_hypertable( 'test_collation', 'time', chunk_time_interval=> '1 day
 --forbid setting collation in compression ORDER BY clause. (parse error is fine)
 alter table test_collation set (timescaledb.compress, timescaledb.compress_segmentby='device_id, device_id_2', timescaledb.compress_orderby = 'val_1 COLLATE "POSIX", val2, time');
 \set ON_ERROR_STOP 1
-alter table test_collation set (timescaledb.compress, timescaledb.compress_segmentby='device_idX, device_id_2', timescaledb.compress_orderby = 'val_1, val_2, time');
+alter table test_collation set (timescaledb.compress, timescaledb.compress_segmentby='device_id, device_id_2', timescaledb.compress_orderby = 'val_1, val_2, time');
 
 insert into test_collation
 select generate_series('2018-01-01 00:00'::timestamp, '2018-01-10 00:00'::timestamp, '2 hour'), 'device_1', 'device_3', gen_rand_minstd(), gen_rand_minstd();
