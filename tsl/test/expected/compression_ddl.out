@@ -1294,10 +1294,18 @@ CREATE MATERIALIZED VIEW test1_cont_view2
 WITH (timescaledb.continuous,
       timescaledb.materialized_only=true
       )
-AS SELECT time_bucket('1 hour', "Time"), SUM(intcol)
+AS SELECT time_bucket('1 hour', "Time") as t, SUM(intcol) as sum,txtcol
    FROM test1
-   GROUP BY 1 WITH NO DATA;
--- SELECT time_bucket('1 hour', "Time"), SUM(intcol)
---    FROM test1
---    GROUP BY 1;
+   GROUP BY 1,txtcol WITH NO DATA;
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (                              
+  timescaledb.compress = true,
+  timescaledb.compress_segmentby = 'txtcol'
+);
+NOTICE:  defaulting 2 to 
 DROP TABLE metric CASCADE;
+select 'ok';
+ ?column? 
+----------
+ ok
+(1 row)
+

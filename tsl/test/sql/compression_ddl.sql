@@ -566,5 +566,3 @@ ALTER MATERIALIZED VIEW test1_cont_view2 SET (
 );
 
 DROP TABLE metric CASCADE;
-select 'ok';
-
