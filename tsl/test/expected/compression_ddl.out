@@ -1301,11 +1301,4 @@ ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true,
   timescaledb.compress_segmentby = 'txtcol'
 );
-NOTICE:  defaulting 2 to 
 DROP TABLE metric CASCADE;
-select 'ok';
- ?column? 
-----------
- ok
-(1 row)
-
