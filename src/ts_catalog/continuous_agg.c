@@ -39,6 +39,7 @@
 #include "time_utils.h"
 #include "ts_catalog/catalog.h"
 #include "errors.h"
+#include "compression_with_clause.h"
 
 #define BUCKET_FUNCTION_SERIALIZE_VERSION 1
 #define CHECK_NAME_MATCH(name1, name2) (namestrcmp(name1, name2) == 0)
@@ -89,6 +90,75 @@ ts_continuous_agg_with_clause_parse(const List *defelems)
 								 continuous_aggregate_with_clause_def,
 								 TS_ARRAY_LEN(continuous_aggregate_with_clause_def));
 }
+
+extern const WithClauseDefinition compress_hypertable_with_clause_def[];
+
+Node *
+unparse_value(Oid oid, Datum parsed)
+{
+	switch (oid)
+	{
+		case BOOLOID:
+			if (DatumGetBool(parsed))
+				return (Node *) makeString("true");
+			else
+				return (Node *) makeString("false");
+		case INTERVALOID:
+		case TEXTOID:
+			return DatumGetCString(parsed);
+
+		default:
+			ereport(ERROR,
+					(errcode(ERRCODE_ASSERT_FAILURE),
+					 errmsg("Unexpected unparse OID"),
+					 errdetail("%d", oid)));
+			break;
+	}
+}
+
+List *
+cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
+{
+	List *ret = NIL;
+
+	for (int i = 0; i < _CompressOptionMax; i++)
+	{
+		WithClauseResult *input = NIL;
+		switch (i)
+		{
+			case CompressEnabled:
+				input = &with_clauses[ContinuousViewOptionCompress];
+				break;
+			case CompressSegmentBy:
+				input = &with_clauses[ContinuousViewOptionCompressSegmentBy];
+				break;
+			case CompressOrderBy:
+				input = &with_clauses[ContinuousViewOptionCompressOrderBy];
+				break;
+			case CompressChunkTimeInterval:
+				input = &with_clauses[ContinuousViewOptionCompressChunkTimeInterval];
+				break;
+			default:
+				ereport(ERROR,
+						(errcode(ERRCODE_ASSERT_FAILURE), errmsg("Unhandled compression option")));
+				break;
+		}
+
+		if (!input->is_default)
+		{
+			WithClauseDefinition def = compress_hypertable_with_clause_def[i];
+			Node *value = unparse_value(def.type_id, input->parsed);
+			DefElem *enable = makeDefElemExtended("timescaledb",
+												  compress_hypertable_with_clause_def[i].arg_name,
+												  value,
+												  DEFELEM_UNSPEC,
+												  -1);
+			lappend(ret, )
+		}
+	}
+	return ret;
+}
+
 static void
 init_scan_by_mat_hypertable_id(ScanIterator *iterator, const int32 mat_hypertable_id)
 {

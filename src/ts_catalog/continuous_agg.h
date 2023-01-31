@@ -64,6 +64,8 @@ typedef enum ContinuousAggViewType
 
 extern TSDLLEXPORT WithClauseResult *ts_continuous_agg_with_clause_parse(const List *defelems);
 
+extern TSDLLEXPORT List *cagg_unnparse_compression_defelems(const WithClauseResult*with_clauses);
+
 #define BUCKET_WIDTH_VARIABLE (-1)
 
 /*

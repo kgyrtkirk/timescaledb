@@ -245,14 +245,24 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, bool compress_ena
 	tsl_process_compress_table(&alter_cmd, mat_ht, with_clause_options);
 }
 
-// unparses the compression related options into DefElem-s from the given options
-List*
-build_compression_options(WithClauseResult *with_clause_options) {
-	List* list=NIL;
 
+// bool
+// is_compression_option_key(const char*key) {
 
-	return list;
-}
+// }
+
+// /* unparses the compression related options into DefElem structs from the given options */
+// List*
+// build_compression_options(WithClauseResult *with_clause_options) {
+// 	List* list=NIL;
+// 	for(int i=0;i<_ContinuousViewOptionMax;i++) {
+// 		if(is_compression_option_key(with_clause_options[i].parsed)) {
+
+// 		}
+// 	}
+// 	return list;
+// }
+
 void
 continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_options)
 {
@@ -281,7 +291,7 @@ continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_
 		update_materialized_only(agg, materialized_only);
 		ts_cache_release(hcache);
 	}
-	List* compression_options=build_compression_options(with_clause_options);
+	List* compression_options=cagg_unnparse_compression_defelems(with_clause_options);
 
 	if (!with_clause_options[ContinuousViewOptionCompress].is_default)
 	{
