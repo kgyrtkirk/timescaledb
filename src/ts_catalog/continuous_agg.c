@@ -138,21 +138,20 @@ cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
 
 	for (int i = 0; i < _CompressOptionMax; i++)
 	{
-
-		int option_index=0;
+		int option_index = 0;
 		switch (i)
 		{
 			case CompressEnabled:
-				option_index=ContinuousViewOptionCompress;
+				option_index = ContinuousViewOptionCompress;
 				break;
 			case CompressSegmentBy:
-				option_index=ContinuousViewOptionCompressSegmentBy;
+				option_index = ContinuousViewOptionCompressSegmentBy;
 				break;
 			case CompressOrderBy:
-				option_index=ContinuousViewOptionCompressOrderBy;
+				option_index = ContinuousViewOptionCompressOrderBy;
 				break;
 			case CompressChunkTimeInterval:
-				option_index=ContinuousViewOptionCompressChunkTimeInterval;
+				option_index = ContinuousViewOptionCompressChunkTimeInterval;
 				break;
 			default:
 				ereport(ERROR,
@@ -167,11 +166,11 @@ cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
 		{
 			Node *value = unparse_value(def.type_id, input->parsed);
 			DefElem *elem = makeDefElemExtended("timescaledb",
-												(char*)def.arg_name,
+												(char *) def.arg_name,
 												value,
 												DEFELEM_UNSPEC,
 												-1);
-			ret=lappend(ret, elem);
+			ret = lappend(ret, elem);
 		}
 	}
 	return ret;
