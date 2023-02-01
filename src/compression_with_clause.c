@@ -299,7 +299,7 @@ ts_compress_hypertable_parse_chunk_time_interval(WithClauseResult *parsed_option
 }
 
 const char *
-compress_with_clause_def_get_name(int index)
+ts_compress_with_clause_def_get_name(int index)
 {
 	if (index < 0 || index >= _CompressOptionMax)
 		ereport(ERROR, (errmsg("option index out of range!")));
