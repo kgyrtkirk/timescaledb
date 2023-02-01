@@ -1,8 +1,11 @@
 name: Check CHANGELOG.md updated
-on:
+"on":
   pull_request:
     types: [opened, synchronize, reopened, edited]
-    branches: [main]
+    # It's important to check that the changelog is updated with bug fixes that
+    # we backport to the release branches, so these branches are included as
+    # well.
+    branches: [main, "[0-9]+.[0-9]+.x"]
 jobs:
   # Check that the CHANGELOG is updated by the pull request. This can be
   # disabled by adding a trailer line of the following form to the
@@ -21,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
