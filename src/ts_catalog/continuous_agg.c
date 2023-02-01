@@ -91,9 +91,7 @@ ts_continuous_agg_with_clause_parse(const List *defelems)
 								 TS_ARRAY_LEN(continuous_aggregate_with_clause_def));
 }
 
-Node *
-unparse_value(Oid oid, Datum parsed)
-;
+Node *unparse_value(Oid oid, Datum parsed);
 
 Node *
 unparse_value(Oid oid, Datum parsed)
@@ -119,7 +117,7 @@ unparse_value(Oid oid, Datum parsed)
 			Assert(OidIsValid(in_fn));
 
 			char *val = OidOutputFunctionCall(in_fn, parsed);
-			return (Node*)makeString(val);
+			return (Node *) makeString(val);
 		}
 
 		default:
