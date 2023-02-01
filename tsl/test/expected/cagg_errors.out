@@ -540,10 +540,9 @@ NOTICE:  continuous aggregate "i2980_cagg2" is already up-to-date
 --now enable compression with invalid parameters
 ALTER MATERIALIZED VIEW i2980_cagg2 SET ( timescaledb.compress,
 timescaledb.compress_segmentby = 'bucket');
-ERROR:  unrecognized parameter "timescaledb.compress_segmentby"
+ERROR:  cannot use column "bucket" for both ordering and segmenting
 ALTER MATERIALIZED VIEW i2980_cagg2 SET ( timescaledb.compress,
 timescaledb.compress_orderby = 'bucket');
-ERROR:  unrecognized parameter "timescaledb.compress_orderby"
 --enable compression and test re-enabling compression
 ALTER MATERIALIZED VIEW i2980_cagg2 SET ( timescaledb.compress);
 insert into i2980 select now();
@@ -559,7 +558,7 @@ ERROR:  cannot change configuration on already compressed chunks
 ALTER MATERIALIZED VIEW i2980_cagg2 SET ( timescaledb.compress = 'true');
 ERROR:  cannot change configuration on already compressed chunks
 ALTER MATERIALIZED VIEW i2980_cagg2 SET ( timescaledb.compress, timescaledb.compress_segmentby = 'bucket');
-ERROR:  unrecognized parameter "timescaledb.compress_segmentby"
+ERROR:  cannot change configuration on already compressed chunks
 --Errors with compression policy on caggs--
 select add_continuous_aggregate_policy('i2980_cagg2', interval '10 day', interval '2 day' ,'4h') AS job_id ;
  job_id 
