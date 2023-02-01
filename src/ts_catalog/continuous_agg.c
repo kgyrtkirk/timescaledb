@@ -130,7 +130,7 @@ unparse_value(Oid oid, Datum parsed)
 }
 
 List *
-cagg_unnparse_compression_defelems(const WithClauseResult *with_clauses)
+ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clauses)
 {
 	List *ret = NIL;
 

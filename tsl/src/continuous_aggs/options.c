@@ -282,7 +282,7 @@ continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_
 		update_materialized_only(agg, materialized_only);
 		ts_cache_release(hcache);
 	}
-	List *compression_options = cagg_unnparse_compression_defelems(with_clause_options);
+	List *compression_options = ts_continuous_agg_unparse_compression_defelems(with_clause_options);
 
 	if (list_length(compression_options) > 0)
 	{
