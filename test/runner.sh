@@ -105,7 +105,11 @@ export TEST_DBNAME
 # we strip out any output between <exclude_from_test></exclude_from_test>
 # and the part about memory usage in EXPLAIN ANALYZE output of Sort nodes
 # also ignore the Postgres rehashing catalog debug messages from 'src/backend/utils/cache/catcache.c'
-${PSQL} -U ${TEST_PGUSER} \
+echo "asd$@ " >&10
+(
+echo 'select 1;'
+cat
+)|${PSQL} -U ${TEST_PGUSER} \
      -v ON_ERROR_STOP=1 \
      -v VERBOSITY=terse \
      -v ECHO=all \
@@ -140,3 +144,4 @@ ${PSQL} -U ${TEST_PGUSER} \
                -e 's! Memory Usage: [0-9]\{1,\}kB!!' \
                -e 's! Average  Peak Memory: [0-9]\{1,\}kB!!' | \
           grep -v 'DEBUG:  rehashing catalog cache id'
+
