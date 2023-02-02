@@ -194,4 +194,4 @@ mkdir -p ${EXE_DIR}/sql/dump
 export PG_REGRESS_DIFF_OPTS
 
 PG_REGRESS_OPTS="${PG_REGRESS_OPTS}  --schedule=${SCHEDULE}"
-${PG_REGRESS} --debug "$@" ${PG_REGRESS_OPTS} 10>&2
+${PG_REGRESS} "$@" ${PG_REGRESS_OPTS}
