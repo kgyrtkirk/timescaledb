@@ -175,10 +175,9 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 			if (namestrcmp((Name) & (mat_ht_dim->fd.column_name), grpcol) == 0)
 				continue;
 			appendStringInfoString(info, quote_identifier(grpcol));
-
 		}
 
-		if (info->len>0)
+		if (info->len > 0)
 		{
 			DefElem *segby;
 			segby = makeDefElemExtended("timescaledb",
