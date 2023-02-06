@@ -549,7 +549,6 @@ WHERE uc_hypertable.table_name like 'metric' \gset
 
 DROP TABLE metric CASCADE;
 
-drop table if EXISTS "tEst2" ;
 -- Creating hypertable
 CREATE TABLE IF NOT EXISTS "tEst2" (
     "Id" uuid NOT NULL,
@@ -564,8 +563,6 @@ SELECT create_hypertable(
 );
 
 alter table "tEst2" set (timescaledb.compress=true, timescaledb.compress_segmentby='"Id"');
-
-DROP MATERIALIZED VIEW if EXISTS "tEst2_mv";
 
 CREATE MATERIALIZED VIEW "tEst2_mv"
 WITH (timescaledb.continuous) AS
