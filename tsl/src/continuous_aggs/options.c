@@ -166,13 +166,8 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 	List *grp_colnames = cagg_find_groupingcols(agg, mat_ht);
 	if (grp_colnames)
 	{
+		StringInfo info = makeStringInfo();
 		ListCell *lc;
-		/* we have column names. they are guaranteed to be at most
-		 * NAMEDATALEN
-		 */
-		int seglen = ((NAMEDATALEN + 1) * list_length(grp_colnames)) + 1;
-		char *segmentby = (char *) palloc(seglen);
-		int segidx = 0;
 		foreach (lc, grp_colnames)
 		{
 			int collen;
@@ -180,35 +175,16 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 			/* skip time dimension col if it appears in group-by list */
 			if (namestrcmp((Name) & (mat_ht_dim->fd.column_name), grpcol) == 0)
 				continue;
-			if (segidx > 0 && (seglen - segidx) > 1)
-			{
-				strlcpy(segmentby + segidx, ",", 2);
-				segidx = segidx + 1;
-			}
-			collen = strlen(grpcol);
-			if (seglen - segidx > collen)
-			{
-				strlcpy(segmentby + segidx, grpcol, collen + 1);
-				segidx = segidx + collen;
-			}
-			else
-			{
-				ereport(ERROR,
-						(errcode(ERRCODE_INTERNAL_ERROR),
-						 errmsg("%s not enough space to copy segment by column (%d %d %d)",
-								__func__,
-								seglen,
-								segidx,
-								collen)));
-			}
+			appendStringInfoString(info, quote_identifier("grpcol"));
+
 		}
-		if (segidx != 0)
+
+		if (info->len>0)
 		{
 			DefElem *segby;
-			segmentby[segidx] = '\0';
 			segby = makeDefElemExtended("timescaledb",
 										"compress_segmentby",
-										(Node *) makeString(segmentby),
+										(Node *) makeString(info->data),
 										DEFELEM_UNSPEC,
 										-1);
 			defelems = lappend(defelems, segby);
