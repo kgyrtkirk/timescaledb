@@ -550,7 +550,7 @@ WHERE uc_hypertable.table_name like 'metric' \gset
 DROP TABLE metric CASCADE;
 
 -- Creating hypertable
-CREATE TABLE IF NOT EXISTS "tEst2" (
+CREATE TABLE "tEst2" (
     "Id" uuid NOT NULL,
     "Time" timestamp with time zone NOT NULL,
     CONSTRAINT "test2_pkey" PRIMARY KEY ("Id", "Time")
