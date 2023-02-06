@@ -156,7 +156,7 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 {
 	List *defelems = NIL;
 	const Dimension *mat_ht_dim = hyperspace_get_open_dimension(mat_ht->space, 0);
-	const char *mat_ht_timecolname = NameStr(mat_ht_dim->fd.column_name);
+	const char *mat_ht_timecolname = quote_identifier(NameStr(mat_ht_dim->fd.column_name));
 	DefElem *ordby = makeDefElemExtended("timescaledb",
 										 "compress_orderby",
 										 (Node *) makeString((char *) mat_ht_timecolname),

@@ -570,8 +570,8 @@ DROP MATERIALIZED VIEW if EXISTS "tEst2_mv";
 CREATE MATERIALIZED VIEW "tEst2_mv"
 WITH (timescaledb.continuous) AS
 SELECT "Id" as "Idd",
-   time_bucket(INTERVAL '1 day', "Time") AS bucket
+   time_bucket(INTERVAL '1 day', "Time") AS "bUcket"
 FROM public."tEst2" 
-GROUP BY "Idd", bucket;
+GROUP BY "Idd", "bUcket";
 
 ALTER MATERIALIZED VIEW "tEst2_mv" SET (timescaledb.compress = true);
