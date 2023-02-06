@@ -170,12 +170,11 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 		ListCell *lc;
 		foreach (lc, grp_colnames)
 		{
-			int collen;
 			char *grpcol = (char *) lfirst(lc);
 			/* skip time dimension col if it appears in group-by list */
 			if (namestrcmp((Name) & (mat_ht_dim->fd.column_name), grpcol) == 0)
 				continue;
-			appendStringInfoString(info, quote_identifier("grpcol"));
+			appendStringInfoString(info, quote_identifier(grpcol));
 
 		}
 
