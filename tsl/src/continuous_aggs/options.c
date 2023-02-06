@@ -175,7 +175,6 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 		int segidx = 0;
 		foreach (lc, grp_colnames)
 		{
-
 			int collen;
 			char *grpcol = (char *) lfirst(lc);
 			/* skip time dimension col if it appears in group-by list */
@@ -227,13 +226,11 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, List *compress_de
 	WithClauseResult *with_clause_options =
 		ts_compress_hypertable_set_clause_parse(compress_defelems);
 
-
 	if (with_clause_options[CompressEnabled].parsed)
 	{
 		List *default_compress_defelems = cagg_get_compression_params(agg, mat_ht);
 		WithClauseResult *default_with_clause_options =
 			ts_compress_hypertable_set_clause_parse(default_compress_defelems);
-			compress_defelems=default_compress_defelems;
 		// merge defaults if there's any
 		for (int i = 0; i < _CompressOptionMax; i++)
 		{
