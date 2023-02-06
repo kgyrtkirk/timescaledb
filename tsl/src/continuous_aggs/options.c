@@ -174,6 +174,8 @@ cagg_get_compression_params(ContinuousAgg *agg, Hypertable *mat_ht)
 			/* skip time dimension col if it appears in group-by list */
 			if (namestrcmp((Name) & (mat_ht_dim->fd.column_name), grpcol) == 0)
 				continue;
+			if (info->len > 0)
+				appendStringInfoString(info, ",");
 			appendStringInfoString(info, quote_identifier(grpcol));
 		}
 
