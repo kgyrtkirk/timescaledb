@@ -547,22 +547,54 @@ WHERE uc_hypertable.table_name like 'metric' \gset
 -- get definition of compressed hypertable and notice the index
 \d :COMP_SCHEMA_NAME.:COMP_TABLE_NAME
 
-CREATE TABLE public."tEst2"
+-- #5161 segmentby param
+
+\d test1
+
+CREATE MATERIALIZED VIEW test1_cont_view2
+WITH (timescaledb.continuous,
+      timescaledb.materialized_only=true
+      )
+AS SELECT time_bucket('1 hour', "Time") as t, SUM(intcol) as sum,txtcol as "iDeA"
+   FROM test1
+   GROUP BY 1,txtcol WITH NO DATA;
+
+
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (
+  timescaledb.compress = true
+);
+
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (
+  timescaledb.compress = true,
+  timescaledb.compress_segmentby = '"iDeA"'
+);
+
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (
+  timescaledb.compress = true,
+  timescaledb.compress_segmentby = '"iDeA"'
+);
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (
+  timescaledb.compress = false
+);
+
+
+-- Creating hypertable
+CREATE TABLE IF NOT EXISTS public."HyperVqt"
 (
     "Id" uuid NOT NULL,
     "Time" timestamp with time zone NOT NULL,
     "Value" real NOT NULL,
     "Status" integer NOT NULL,
-    CONSTRAINT "tEst2_pkey" PRIMARY KEY ("Id", "Time")
+    CONSTRAINT "HyperVqt_pkey" PRIMARY KEY ("Id", "Time")
 );
 
 SELECT create_hypertable(
-  '"tEst2"',
+  'public."HyperVqt"',
   'Time',
   chunk_time_interval => INTERVAL '1 day'
 );
 
-alter table public."tEst2" set (timescaledb.compress=true, timescaledb.compress_segmentby='"Id"');
+alter table public."HyperVqt" set (timescaledb.compress=true, timescaledb.compress_segmentby='"Id"');
 
 
 --DROP MATERIALIZED VIEW daily_metrics_compressed;
@@ -574,16 +606,20 @@ SELECT "Id" as "Idd",
    AVG("Value"), 
    MAX("Value"),
    MIN("Value")
-FROM public."tEst2" 
+FROM public."HyperVqt" 
 GROUP BY "Idd", bucket;
 
 -- Adding compression on CAGGs
-ALTER MATERIALIZED VIEW daily_metrics_compressed SET (timescaledb.compress = true);
--- #5161 segmentby param
+ALTER MATERIALIZED VIEW daily_metrics_compressed SET (timescaledb.compress = true); -- This will work
+--ALTER MATERIALIZED VIEW daily_metrics_compressed SET (timescaledb.compress = false); -- This will work
 ALTER MATERIALIZED VIEW daily_metrics_compressed SET (
 timescaledb.compress = true,
 timescaledb.compress_segmentby='"Idd"'
 ); -- This will NOT WORK
 
+
+
+
+select 1;
 
 DROP TABLE metric CASCADE;
