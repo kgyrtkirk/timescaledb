@@ -547,10 +547,32 @@ WHERE uc_hypertable.table_name like 'metric' \gset
 -- get definition of compressed hypertable and notice the index
 \d :COMP_SCHEMA_NAME.:COMP_TABLE_NAME
 
+-- #5290 Compression can't be enabled on MVs
+CREATE TABLE "tEst2" (
+    "Id" uuid NOT NULL,
+    "Time" timestamp with time zone NOT NULL,
+    CONSTRAINT "test2_pkey" PRIMARY KEY ("Id", "Time")
+);
+
+SELECT create_hypertable(
+  '"tEst2"',
+  'Time',
+  chunk_time_interval => INTERVAL '1 day'
+);
+
+alter table "tEst2" set (timescaledb.compress=true, timescaledb.compress_segmentby='"Id"');
+
+CREATE MATERIALIZED VIEW "tEst2_mv"
+WITH (timescaledb.continuous) AS
+SELECT "Id" as "Idd",
+   time_bucket(INTERVAL '1 day', "Time") AS "bUcket"
+FROM public."tEst2"
+GROUP BY "Idd", "bUcket";
+
+ALTER MATERIALIZED VIEW "tEst2_mv" SET (timescaledb.compress = true);
+
+
 -- #5161 segmentby param
-
-\d test1
-
 CREATE MATERIALIZED VIEW test1_cont_view2
 WITH (timescaledb.continuous,
       timescaledb.materialized_only=true

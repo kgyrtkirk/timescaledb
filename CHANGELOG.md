@@ -11,13 +11,30 @@ accidentally triggering the load of a previous DB version.**
 * #5245 Mange life-cycle of connections via memory contexts
 * #5246 Make connection establishment interruptible
 * #5262 Extend enabling compression on a continuous aggregrate with 'segmentby' and 'orderby' parameters
+* #5253 Make data node command execution interruptible
 
 **Bugfixes**
-* #4804 Skip bucketing when start or end of refresh job is null
 * #4926 Fix corruption when inserting into compressed chunks
 * #5218 Add role-level security to job error log
 * #5214 Fix use of prepared statement in async module
+* #5290 Compression can't be enabled on MVs when segmentby/orderby columns need quotation
+
+## 2.9.3 (2023-02-03)
+
+This release contains bug fixes since the 2.9.2 release.
+This release is high priority for upgrade. We strongly recommend that you
+upgrade as soon as possible.
+
+**Bugfixes**
+* #4804 Skip bucketing when start or end of refresh job is null
+* #5108 Fix column ordering in compressed table index not following the order of a multi-column segment by definition
+* #5187 Don't enable clang-tidy by default
+* #5255 Fix year not being considered as a multiple of day/month in hierarchical continuous aggregates
 * #5259 Lock down search_path in SPI calls
+
+**Thanks**
+* @ssmoss for reporting issues on continuous aggregates
+* @jaskij for reporting the compliation issue that occurred with clang
 
 ## 2.9.2 (2023-01-26)
 
