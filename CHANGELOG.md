@@ -18,6 +18,7 @@ accidentally triggering the load of a previous DB version.**
 * #5218 Add role-level security to job error log
 * #5214 Fix use of prepared statement in async module
 * #5290 Compression can't be enabled on MVs when segmentby/orderby columns need quotation
+* #5290 Compression can't be enabled on continuous aggregates when segmentby/orderby columns need quotation
 
 ## 2.9.3 (2023-02-03)
 
