@@ -547,7 +547,7 @@ WHERE uc_hypertable.table_name like 'metric' \gset
 -- get definition of compressed hypertable and notice the index
 \d :COMP_SCHEMA_NAME.:COMP_TABLE_NAME
 
--- #5290 Compression can't be enabled on MVs
+-- #5290 Compression can't be enabled on caggs
 CREATE TABLE "tEst2" (
     "Id" uuid NOT NULL,
     "Time" timestamp with time zone NOT NULL,
