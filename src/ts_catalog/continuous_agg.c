@@ -124,7 +124,7 @@ ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clau
 
 		if (!input->is_default)
 		{
-			Node *value = (Node*)makeString(ts_with_clause_result_unparse_value(input));
+			Node *value = (Node *) makeString(ts_with_clause_result_unparse_value(input));
 			DefElem *elem = makeDefElemExtended("timescaledb",
 												(char *) def.arg_name,
 												value,
