@@ -582,6 +582,13 @@ AS SELECT time_bucket('1 hour', "Time") as t, SUM(intcol) as sum,txtcol as "iDeA
    GROUP BY 1,txtcol WITH NO DATA;
 
 
+\set ON_ERROR_STOP 0
+ALTER MATERIALIZED VIEW test1_cont_view2 SET (
+  timescaledb.compress = true,
+  timescaledb.compress_segmentby = 'invalid_column'
+);
+\set ON_ERROR_STOP 1
+
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true
 );
@@ -591,12 +598,17 @@ ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress_segmentby = '"iDeA"'
 );
 
+\set ON_ERROR_STOP 0
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true,
-  timescaledb.compress_segmentby = '"iDeA"'
+  timescaledb.compress_orderby = '"iDeA"'
 );
+\set ON_ERROR_STOP 1
+
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = false
 );
+
+
 
 DROP TABLE metric CASCADE;
