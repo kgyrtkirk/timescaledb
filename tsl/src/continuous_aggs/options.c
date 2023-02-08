@@ -213,10 +213,10 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, List *compress_de
 			if (with_clause_options[i].is_default && !default_with_clause_options[i].is_default)
 			{
 				with_clause_options[i] = default_with_clause_options[i];
-				// ereport(NOTICE,
-				// 		errmsg("defaulting %s to %s",
-				// 			   ts_compress_with_clause_def_get_name(i),
-				// 			   DatumGetCString(default_with_clause_options[i].parsed)));
+				ereport(NOTICE,
+						errmsg("defaulting %s to %s",
+							   with_clause_options[i].definition->arg_name,
+							   ts_with_clause_result_unparse_value(&with_clause_options[i])));
 			}
 		}
 	}

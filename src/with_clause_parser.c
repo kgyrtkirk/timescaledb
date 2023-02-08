@@ -76,6 +76,7 @@ ts_with_clauses_parse(const List *def_elems, const WithClauseDefinition *args, S
 
 	for (i = 0; i < nargs; i++)
 	{
+		results[i].definition = &args[i];
 		results[i].parsed = args[i].default_val;
 		results[i].is_default = true;
 	}
@@ -111,6 +112,24 @@ ts_with_clauses_parse(const List *def_elems, const WithClauseDefinition *args, S
 	}
 
 	return results;
+}
+
+extern TSDLLEXPORT char *
+ts_with_clause_result_unparse_value(const WithClauseResult *result)
+{
+	Oid oid = result->definition->type_id;
+	if (!OidIsValid(oid))
+		elog(ERROR, "Argument \"%d\" has invalid Oid!", oid);
+
+	Oid in_fn;
+	bool typIsVarlena;
+
+	getTypeOutputInfo(oid, &in_fn, &typIsVarlena);
+
+	Assert(OidIsValid(in_fn));
+
+	char *val = OidOutputFunctionCall(in_fn, result->parsed);
+	return val;
 }
 
 static Datum
