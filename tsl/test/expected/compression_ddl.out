@@ -1297,6 +1297,8 @@ FROM public."tEst2"
 GROUP BY "Idd", "bUcket";
 NOTICE:  continuous aggregate "tEst2_mv" is already up-to-date
 ALTER MATERIALIZED VIEW "tEst2_mv" SET (timescaledb.compress = true);
+NOTICE:  defaulting compress_segmentby to "Idd"
+NOTICE:  defaulting compress_orderby to "bUcket"
 -- #5161 segmentby param
 CREATE MATERIALIZED VIEW test1_cont_view2
 WITH (timescaledb.continuous,
@@ -1310,20 +1312,25 @@ ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true,
   timescaledb.compress_segmentby = 'invalid_column'
 );
+NOTICE:  defaulting compress_orderby to t
 ERROR:  column "invalid_column" does not exist
 \set ON_ERROR_STOP 1
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true
 );
+NOTICE:  defaulting compress_segmentby to "iDeA"
+NOTICE:  defaulting compress_orderby to t
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true,
   timescaledb.compress_segmentby = '"iDeA"'
 );
+NOTICE:  defaulting compress_orderby to t
 \set ON_ERROR_STOP 0
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = true,
   timescaledb.compress_orderby = '"iDeA"'
 );
+NOTICE:  defaulting compress_segmentby to "iDeA"
 ERROR:  cannot use column "iDeA" for both ordering and segmenting
 \set ON_ERROR_STOP 1
 ALTER MATERIALIZED VIEW test1_cont_view2 SET (

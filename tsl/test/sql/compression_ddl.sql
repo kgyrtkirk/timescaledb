@@ -609,6 +609,4 @@ ALTER MATERIALIZED VIEW test1_cont_view2 SET (
   timescaledb.compress = false
 );
 
-
-
 DROP TABLE metric CASCADE;

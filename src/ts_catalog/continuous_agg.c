@@ -91,44 +91,6 @@ ts_continuous_agg_with_clause_parse(const List *defelems)
 								 TS_ARRAY_LEN(continuous_aggregate_with_clause_def));
 }
 
-Node *unparse_value(Oid oid, Datum parsed);
-
-Node *
-unparse_value(Oid oid, Datum parsed)
-{
-	if (!OidIsValid(oid))
-		elog(ERROR, "Argument \"%d\" has invalid Oid!", oid);
-
-	switch (oid)
-	{
-		case BOOLOID:
-			if (DatumGetBool(parsed))
-				return (Node *) makeString("true");
-			else
-				return (Node *) makeString("false");
-		case INTERVALOID:
-		case TEXTOID:
-		{
-			Oid in_fn;
-			bool typIsVarlena;
-
-			getTypeOutputInfo(oid, &in_fn, &typIsVarlena);
-
-			Assert(OidIsValid(in_fn));
-
-			char *val = OidOutputFunctionCall(in_fn, parsed);
-			return (Node *) makeString(val);
-		}
-
-		default:
-			ereport(ERROR,
-					(errcode(ERRCODE_ASSERT_FAILURE),
-					 errmsg("Unexpected unparse OID"),
-					 errdetail("%d", oid)));
-			break;
-	}
-}
-
 List *
 ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clauses)
 {
@@ -162,7 +124,7 @@ ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clau
 
 		if (!input->is_default)
 		{
-			Node *value = unparse_value(def.type_id, input->parsed);
+			Node *value = (Node*)makeString(ts_with_clause_result_unparse_value(input));
 			DefElem *elem = makeDefElemExtended("timescaledb",
 												(char *) def.arg_name,
 												value,
