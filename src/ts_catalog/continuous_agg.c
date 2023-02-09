@@ -114,8 +114,7 @@ ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clau
 				option_index = ContinuousViewOptionCompressChunkTimeInterval;
 				break;
 			default:
-				ereport(ERROR,
-						(errcode(ERRCODE_ASSERT_FAILURE), errmsg("Unhandled compression option")));
+				elog(ERROR, "Unhandled compression option");
 				break;
 		}
 
