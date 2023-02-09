@@ -38,4 +38,5 @@ extern TSDLLEXPORT List *ts_compress_hypertable_parse_order_by(WithClauseResult 
 extern TSDLLEXPORT Interval *
 ts_compress_hypertable_parse_chunk_time_interval(WithClauseResult *parsed_options,
 												 Hypertable *hypertable);
+
 #endif

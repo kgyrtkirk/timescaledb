@@ -10,14 +10,13 @@ accidentally triggering the load of a previous DB version.**
 * #5241 Allow RETURNING clause when inserting into compressed chunks
 * #5245 Mange life-cycle of connections via memory contexts
 * #5246 Make connection establishment interruptible
-* #5262 Extend enabling compression on a continuous aggregrate with 'segmentby' and 'orderby' parameters
+* #5262 Extend enabling compression on a continuous aggregrate with 'compress_segmentby' and 'compress_orderby' parameters
 * #5253 Make data node command execution interruptible
 
 **Bugfixes**
 * #4926 Fix corruption when inserting into compressed chunks
 * #5218 Add role-level security to job error log
 * #5214 Fix use of prepared statement in async module
-* #5290 Compression can't be enabled on MVs when segmentby/orderby columns need quotation
 * #5290 Compression can't be enabled on continuous aggregates when segmentby/orderby columns need quotation
 
 ## 2.9.3 (2023-02-03)
