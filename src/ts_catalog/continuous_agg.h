@@ -51,7 +51,7 @@ typedef enum ContinuousAggViewOption
 	ContinuousViewOptionCompressSegmentBy,
 	ContinuousViewOptionCompressOrderBy,
 	ContinuousViewOptionCompressChunkTimeInterval,
-	_ContinuousViewOptionMax
+	ContinuousViewOptionMax
 } ContinuousAggViewOption;
 
 typedef enum ContinuousAggViewType

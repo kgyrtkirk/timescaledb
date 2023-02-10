@@ -208,7 +208,7 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, List *compress_de
 		WithClauseResult *default_with_clause_options =
 			ts_compress_hypertable_set_clause_parse(default_compress_defelems);
 		// merge defaults if there's any
-		for (int i = 0; i < _CompressOptionMax; i++)
+		for (int i = 0; i < CompressOptionMax; i++)
 		{
 			if (with_clause_options[i].is_default && !default_with_clause_options[i].is_default)
 			{

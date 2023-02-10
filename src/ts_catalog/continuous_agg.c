@@ -96,7 +96,7 @@ ts_continuous_agg_deparse_compression_defelems(const WithClauseResult *with_clau
 {
 	List *ret = NIL;
 
-	for (int i = 0; i < _CompressOptionMax; i++)
+	for (int i = 0; i < CompressOptionMax; i++)
 	{
 		int option_index = 0;
 		switch (i)
