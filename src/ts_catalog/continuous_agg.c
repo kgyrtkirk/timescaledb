@@ -92,7 +92,7 @@ ts_continuous_agg_with_clause_parse(const List *defelems)
 }
 
 List *
-ts_continuous_agg_deparse_compression_defelems(const WithClauseResult *with_clauses)
+ts_continuous_agg_get_compression_defelems(const WithClauseResult *with_clauses)
 {
 	List *ret = NIL;
 
