@@ -115,7 +115,7 @@ ts_with_clauses_parse(const List *def_elems, const WithClauseDefinition *args, S
 }
 
 extern TSDLLEXPORT char *
-ts_with_clause_result_unparse_value(const WithClauseResult *result)
+ts_with_clause_result_deparse_value(const WithClauseResult *result)
 {
 	Oid oid = result->definition->type_id;
 	if (!OidIsValid(oid))

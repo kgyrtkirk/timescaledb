@@ -92,7 +92,7 @@ ts_continuous_agg_with_clause_parse(const List *defelems)
 }
 
 List *
-ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clauses)
+ts_continuous_agg_deparse_compression_defelems(const WithClauseResult *with_clauses)
 {
 	List *ret = NIL;
 
@@ -123,7 +123,7 @@ ts_continuous_agg_unparse_compression_defelems(const WithClauseResult *with_clau
 
 		if (!input->is_default)
 		{
-			Node *value = (Node *) makeString(ts_with_clause_result_unparse_value(input));
+			Node *value = (Node *) makeString(ts_with_clause_result_deparse_value(input));
 			DefElem *elem = makeDefElemExtended("timescaledb",
 												(char *) def.arg_name,
 												value,

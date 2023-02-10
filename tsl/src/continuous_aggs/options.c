@@ -216,7 +216,7 @@ cagg_alter_compression(ContinuousAgg *agg, Hypertable *mat_ht, List *compress_de
 				ereport(NOTICE,
 						errmsg("defaulting %s to %s",
 							   with_clause_options[i].definition->arg_name,
-							   ts_with_clause_result_unparse_value(&with_clause_options[i])));
+							   ts_with_clause_result_deparse_value(&with_clause_options[i])));
 			}
 		}
 	}
@@ -258,7 +258,7 @@ continuous_agg_update_options(ContinuousAgg *agg, WithClauseResult *with_clause_
 		update_materialized_only(agg, materialized_only);
 		ts_cache_release(hcache);
 	}
-	List *compression_options = ts_continuous_agg_unparse_compression_defelems(with_clause_options);
+	List *compression_options = ts_continuous_agg_deparse_compression_defelems(with_clause_options);
 
 	if (list_length(compression_options) > 0)
 	{
