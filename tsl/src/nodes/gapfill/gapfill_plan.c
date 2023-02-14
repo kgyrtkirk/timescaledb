@@ -183,7 +183,7 @@ gapfill_plan_create(PlannerInfo *root, RelOptInfo *rel, CustomPath *path, List *
 	cscan->scan.scanrelid = 0;
 	cscan->scan.plan.targetlist = tlist;
 	cscan->custom_plans = custom_plans;
-	cscan->custom_scan_tlist = tlist;
+	cscan->custom_scan_tlist = tlist;//((AggPath*)list_head(path->custom_paths));
 	cscan->flags = path->flags;
 	cscan->methods = &gapfill_plan_methods;
 
@@ -225,6 +225,8 @@ gapfill_build_pathtarget(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *
 		Expr *expr = lfirst(lc);
 		gapfill_walker_context context;
 		i++;
+
+
 
 		/* check for locf/interpolate calls */
 		gapfill_expression_walker(expr, marker_function_walker, &context);
@@ -299,6 +301,8 @@ gapfill_build_pathtarget(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *
 										"references not supported")));
 				}
 
+				// makeVar
+
 				if (contain_var_clause(linitial(context.call.window->args)))
 				{
 					add_column_to_pathtarget(pt_path,
@@ -323,6 +327,76 @@ gapfill_build_pathtarget(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *
 				add_column_to_pathtarget(pt_subpath, expr, pt_upper->sortgrouprefs[i]);
 			}
 		}
+	}
+}
+
+typedef struct x_filler_context2
+{
+	PathTarget *project_cols;
+	PathTarget *aggregate_cols;
+	Index sortgroupref;
+
+} x_filler_context2;
+
+#include <nodes/makefuncs.h>
+
+static Node *
+x_walker(Node *node, x_filler_context2 *ctx)
+{
+	if(node==NULL)
+	return NULL;
+	if (IsA(node, Var) || IsA(node, Agg))
+	{
+		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
+
+		Var *new_var =
+			makeVar(1, list_length(ctx->aggregate_cols->exprs), exprType(node), -1, InvalidOid, 0);
+		// add_column_to_pathtarget(ctx->project_cols, new_var, ctx->sortgroupref);
+
+		return node;
+		// return new_var;
+	}
+
+
+	return expression_tree_mutator(node, x_walker, ctx);
+}
+
+/*
+ * Decomposes a path expression into a project + aggregates.
+ *
+ * Example:
+ * 	from:		col_1,min(col_33),case when true then min(col_99) else max(col_88) end,col_2
+ *  project:	col_1,col_2,case when true then col_3 else col_4 end,col_5
+ *  aggregate:	col_1,min(col_33),min(col_99),max(col_88),col_2
+ * 
+*/
+
+static void
+gapfill_build_pathtarget2(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *pt_subpath)
+{
+	ListCell *lc;
+	int i = -1;
+
+	// create a copy which will be altered to become the new target
+	// pt_upper=copy_pathtarget(pt_upper);
+
+	struct x_filler_context2 ctx;
+	ctx.project_cols = pt_path;
+	ctx.aggregate_cols = pt_subpath;
+
+	foreach (lc, pt_upper->exprs)
+	{
+		i++;
+
+		Expr *expr = lfirst(lc);
+		Index	   sortgroupref=pt_upper->sortgrouprefs[i];
+
+		ctx.sortgroupref=sortgroupref;
+
+		Expr *new_expr=x_walker(expr,&ctx);
+		
+		add_column_to_pathtarget(pt_path, new_expr, sortgroupref);
+
 	}
 }
 
@@ -360,6 +434,13 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 	gapfill_build_pathtarget(root->upper_targets[UPPERREL_FINAL],
 							 path->cpath.path.pathtarget,
 							 subpath->pathtarget);
+
+	path->cpath.path.pathtarget = create_empty_pathtarget();
+	subpath->pathtarget = create_empty_pathtarget();
+	gapfill_build_pathtarget2(root->upper_targets[UPPERREL_FINAL],
+							 path->cpath.path.pathtarget,
+							 subpath->pathtarget);
+
 
 	if (!gapfill_correct_order(root, subpath, func))
 	{
