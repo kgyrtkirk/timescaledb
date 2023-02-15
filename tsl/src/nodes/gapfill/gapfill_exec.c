@@ -687,7 +687,7 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 	// TupleDesc tupledesc = state->csstate.ss.ss_currentRelation->rd_att;
 	// TupleDesc subdesc = state->csstate.ss.ps.ps_ExprContext->ecxt_scantuple->tts_tupleDescriptor;
 	TupleDesc tupledesc = x_tupledesc;
-	TupleDesc subdesc = x_tupledesc;
+	// TupleDesc subdesc = x_tupledesc;
 	List *targetlist = copyObject(state->csstate.ss.ps.plan->targetlist);
 	Node *entry;
 	bool isnull;
