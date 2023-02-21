@@ -343,9 +343,9 @@ typedef struct x_filler_context2
 static Node *
 x_walker(Node *node, x_filler_context2 *ctx)
 {
-	if(node==NULL)
-	return NULL;
-	if (IsA(node, Var) || IsA(node, Agg))
+	if (node == NULL)
+		return NULL;
+	if (IsA(node, Var) || IsA(node, Aggref))
 	{
 		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 
@@ -353,7 +353,7 @@ x_walker(Node *node, x_filler_context2 *ctx)
 			makeVar(1, list_length(ctx->aggregate_cols->exprs), exprType(node), -1, InvalidOid, 0);
 		// add_column_to_pathtarget(ctx->project_cols, new_var, ctx->sortgroupref);
 
-		return node;
+		return new_var;
 		// return new_var;
 	}
 
