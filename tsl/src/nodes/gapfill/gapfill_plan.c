@@ -348,6 +348,8 @@ x_walker(Node *node, x_filler_context2 *ctx)
 		return NULL;
 	if (IsA(node, Var) || IsA(node, Aggref))
 	{
+		GapFillColumnState gfstate;
+
 		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 
 		// Var *new_var =

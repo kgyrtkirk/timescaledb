@@ -787,15 +787,15 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 	 * projection for gapfilled tuples so expressions like COALESCE work
 	 * correctly for gapfilled tuples.
 	 */
-	// for (i = 0; i < state->ncolumns; i++)
-	// {
-	// 	if (state->columns[i]->ctype == NULL_COLUMN)
-	// 	{
-	// 		entry = copyObject(list_nth(cscan->custom_scan_tlist, i));
-	// 		entry = gapfill_aggref_mutator(entry, NULL);
-	// 		lfirst(list_nth_cell(targetlist, i)) = entry;
-	// 	}
-	// }
+	for (i = 0; i < state->ncolumns; i++)
+	{
+		if (state->columns[i]->ctype == NULL_COLUMN)
+		{
+			entry = copyObject(list_nth(cscan->custom_scan_tlist, i));
+			entry = gapfill_aggref_mutator(entry, NULL);
+			lfirst(list_nth_cell(targetlist, i)) = entry;
+		}
+	}
 
 	state->pi = ExecBuildProjectionInfo(targetlist,
 										state->csstate.ss.ps.ps_ExprContext,
@@ -953,10 +953,12 @@ gapfill_state_reset_group(GapFillState *state, TupleTableSlot *slot)
 static TupleTableSlot *
 gapfill_state_gaptuple_create(GapFillState *state, int64 time)
 {
-	TupleDesc subdesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
-	TupleTableSlot *slot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
+	// TupleDesc subdesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
+	// TupleTableSlot *slot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
+	// ExecCopySlot(slot, state->subslot);
 
-	ExecCopySlot(slot, state->subslot);
+	TupleTableSlot *slot = state->scanslot;
+
 	GapFillColumnStateUnion column;
 	int i;
 
@@ -1011,8 +1013,6 @@ gapfill_state_gaptuple_create(GapFillState *state, int64 time)
 											  &slot->tts_values[i],
 											  &slot->tts_isnull[i]);
 				break;
-			case NULL_COLUMN:
-				slot->tts_isnull[i]=true;
 			default:
 				break;
 		}
@@ -1176,7 +1176,8 @@ gapfill_fetch_next_tuple(GapFillState *state)
 static void
 gapfill_state_initialize_columns(GapFillState *state)
 {
-	TupleDesc tupledesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
+	// TupleDesc tupledesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
+	TupleDesc tupledesc = state->csstate.ss.ps.ps_ResultTupleSlot->tts_tupleDescriptor;
 	CustomScan *cscan = castNode(CustomScan, state->csstate.ss.ps.plan);
 	TargetEntry *tle;
 	Expr *expr;
@@ -1186,8 +1187,8 @@ gapfill_state_initialize_columns(GapFillState *state)
 	state->columns = palloc(state->ncolumns * sizeof(GapFillColumnState *));
 
 	for (i = 0; i < state->ncolumns; i++)
-	{
-		tle = list_nth(cscan->custom_scan_tlist, i);
+	{//scan.plan.targetlist
+		tle = list_nth(cscan->scan.plan.targetlist, i);
 		expr = tle->expr;
 
 		if (tle->ressortgroupref && gapfill_is_group_column(state, tle))
