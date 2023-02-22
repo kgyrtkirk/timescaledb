@@ -183,7 +183,8 @@ gapfill_plan_create(PlannerInfo *root, RelOptInfo *rel, CustomPath *path, List *
 	cscan->scan.scanrelid = 0;
 	cscan->scan.plan.targetlist = tlist;
 	cscan->custom_plans = custom_plans;
-	cscan->custom_scan_tlist = tlist;//((AggPath*)list_head(path->custom_paths));
+	
+	cscan->custom_scan_tlist = ((Plan*)custom_plans->elements[0].ptr_value)->targetlist;
 	cscan->flags = path->flags;
 	cscan->methods = &gapfill_plan_methods;
 
@@ -349,11 +350,11 @@ x_walker(Node *node, x_filler_context2 *ctx)
 	{
 		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 
-		Var *new_var =
-			makeVar(1, list_length(ctx->aggregate_cols->exprs), exprType(node), -1, InvalidOid, 0);
+		// Var *new_var =
+		// 	makeVar(1, list_length(ctx->aggregate_cols->exprs), exprType(node), -1, InvalidOid, 0);
 		// add_column_to_pathtarget(ctx->project_cols, new_var, ctx->sortgroupref);
 
-		return new_var;
+		return node;
 		// return new_var;
 	}
 
@@ -442,7 +443,7 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 							 subpath->pathtarget);
 
 
-	if (!gapfill_correct_order(root, subpath, func))
+	if (false && !gapfill_correct_order(root, subpath, func))
 	{
 		List *new_order = NIL;
 		ListCell *lc;
