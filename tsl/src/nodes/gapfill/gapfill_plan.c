@@ -58,7 +58,7 @@ is_locf_function_call(FuncExpr *call)
 	return strncmp(func_name, GAPFILL_LOCF_FUNCTION, NAMEDATALEN) == 0;
 }
 /*
- * FuncExpr is interpolate function call
+ * FuncExpr is locf function call
  */
 static inline bool
 is_interpolate_function_call(FuncExpr *call)
@@ -351,9 +351,6 @@ typedef struct x_filler_context2
 	PathTarget *project_cols;
 	PathTarget *aggregate_cols;
 	Index sortgroupref;
-	
-	List*	subpath_column_types;
-	List*	gapfill_column_types;
 
 } x_filler_context2;
 
@@ -367,10 +364,8 @@ x_walker(Node *node, x_filler_context2 *ctx)
 	if (IsA(node, Var) || IsA(node, Aggref))
 	{
 		GapFillColumnState gfstate;
-		// add_new_column_to_pathtarget(ctx->aggregate_cols, node);
-		if(IsA(node, Var))
-			lappend_int(ctx->subpath_column_types, GROUP_COLUMN);
-		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
+		add_new_column_to_pathtarget(ctx->aggregate_cols, node);
+		// add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 		return node;
 	}
 	if (IsA(node, FuncExpr)) {
@@ -378,7 +373,6 @@ x_walker(Node *node, x_filler_context2 *ctx)
 		if(is_gapfill_function_call(expr)) {
 			
 			// use aggregate to compute the normal gapfill groups
-			lappend_int(ctx->subpath_column_types, TIME_COLUMN);
 			add_column_to_pathtarget(ctx->aggregate_cols, copyObject(expr), ctx->sortgroupref);
 			// make an extra nesting of gapfill() to have a separate version for CustomScan to process
 			// FIXME: a shallow copy would suffice			
@@ -394,12 +388,6 @@ x_walker(Node *node, x_filler_context2 *ctx)
 			// add_column_to_pathtarget(ctx->aggregate_cols,
 			// 						 linitial(expr->args),
 			// 						 0);
-			
-			if(is_locf_function_call(expr)) {
-			lappend_int(ctx->subpath_column_types, LOCF_COLUMN);
-			}else {
-			lappend_int(ctx->subpath_column_types, INTERPOLATE_COLUMN);
-			}
 			add_column_to_pathtarget(ctx->aggregate_cols,
 									 linitial(expr->args),
 									 ctx->sortgroupref);
@@ -409,8 +397,6 @@ x_walker(Node *node, x_filler_context2 *ctx)
 		}
 	}
 
-	// not valid to sort below top
-	ctx->sortgroupref = 0;
 	return expression_tree_mutator(node, x_walker, ctx);
 }
 
@@ -436,8 +422,6 @@ gapfill_build_pathtarget2(PathTarget *pt_upper, PathTarget *pt_path, PathTarget 
 	struct x_filler_context2 ctx;
 	ctx.project_cols = pt_path;
 	ctx.aggregate_cols = pt_subpath;
-	ctx.subpath_column_types=NULL;
-	ctx.gapfill_column_types=NULL;
 
 	foreach (lc, pt_upper->exprs)
 	{
