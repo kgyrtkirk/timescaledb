@@ -495,12 +495,9 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 							 path->cpath.path.pathtarget,
 							 subpath->pathtarget);
 
-	path->cpath.path.pathtarget = create_empty_pathtarget();
-	subpath->pathtarget = create_empty_pathtarget();
-
 	struct x_filler_context2 ctx = {
-		.aggregate_cols = subpath->pathtarget,
-		.project_cols=path->cpath.path.pathtarget,
+		.aggregate_cols = subpath->pathtarget= create_empty_pathtarget(),
+		.project_cols=path->cpath.path.pathtarget= create_empty_pathtarget(),
 		.subpath_column_types=NULL,
 		.gapfill_column_types=NULL,
 
@@ -510,11 +507,7 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 	// ctx.subpath_column_types=NULL;
 	// ctx.gapfill_column_types=NULL;
 
-
-
-	gapfill_build_pathtarget2(root->upper_targets[UPPERREL_FINAL],
-&ctx);
-
+	gapfill_build_pathtarget2(root->upper_targets[UPPERREL_FINAL], &ctx);
 
 	if (!gapfill_correct_order(root, subpath, func))
 	{
