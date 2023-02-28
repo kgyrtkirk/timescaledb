@@ -227,8 +227,6 @@ gapfill_build_pathtarget(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *
 		gapfill_walker_context context;
 		i++;
 
-
-
 		/* check for locf/interpolate calls */
 		gapfill_expression_walker(expr, marker_function_walker, &context);
 		if (context.count > 1)
@@ -349,17 +347,38 @@ x_walker(Node *node, x_filler_context2 *ctx)
 	if (IsA(node, Var) || IsA(node, Aggref))
 	{
 		GapFillColumnState gfstate;
-
-		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
-
-		// Var *new_var =
-		// 	makeVar(1, list_length(ctx->aggregate_cols->exprs), exprType(node), -1, InvalidOid, 0);
-		// add_column_to_pathtarget(ctx->project_cols, new_var, ctx->sortgroupref);
-
+		add_new_column_to_pathtarget(ctx->aggregate_cols, node);
+		// add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 		return node;
-		// return new_var;
 	}
+	if (IsA(node, FuncExpr)) {
+		FuncExpr *expr=castNode(FuncExpr, node);
+		if(is_gapfill_function_call(expr)) {
+			
+			// use aggregate to compute the normal gapfill groups
+			add_column_to_pathtarget(ctx->aggregate_cols, copyObject(expr), ctx->sortgroupref);
+			// make an extra nesting of gapfill() to have a separate version for CustomScan to process
+			// FIXME: a shallow copy would suffice			
+			// FuncExpr *newExpr=copyObject(expr);
+			// lsecond(newExpr->args)=expr;
+			// // newExpr->funcid=-123;
+			return expr;
+		}
+		if(is_marker_function_call(expr)) {
+			
+			// add_new_column_to_pathtarget(ctx->aggregate_cols,
+									//  linitial(expr->args));
+			// add_column_to_pathtarget(ctx->aggregate_cols,
+			// 						 linitial(expr->args),
+			// 						 0);
+			add_column_to_pathtarget(ctx->aggregate_cols,
+									 linitial(expr->args),
+									 ctx->sortgroupref);
 
+			// add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
+			return node;
+		}
+	}
 
 	return expression_tree_mutator(node, x_walker, ctx);
 }
@@ -445,7 +464,7 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 							 subpath->pathtarget);
 
 
-	if (false && !gapfill_correct_order(root, subpath, func))
+	if (!gapfill_correct_order(root, subpath, func))
 	{
 		List *new_order = NIL;
 		ListCell *lc;
@@ -541,6 +560,7 @@ plan_add_gapfill(PlannerInfo *root, RelOptInfo *group_rel)
 		{
 			add_path(group_rel, gapfill_path_create(root, lfirst(lc), context.call.func));
 		}
+		group_rel->reltarget = ((Path *) list_nth(group_rel->pathlist, 0))->pathtarget;
 		list_free(copy);
 	}
 }
