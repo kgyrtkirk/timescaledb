@@ -206,7 +206,7 @@ gapfill_plan_create(PlannerInfo *root, RelOptInfo *rel, CustomPath *path, List *
 	cscan->methods = &gapfill_plan_methods;
 
 	cscan->custom_private =
-		list_make4(gfpath->func, root->parse->groupClause, root->parse->jointree, args);
+		lappend(list_make5(gfpath->func, root->parse->groupClause, root->parse->jointree, args,gfpath->subpath_column_types), gfpath->gapfill_column_types);
 
 	return &cscan->scan.plan;
 }
@@ -370,7 +370,9 @@ x_walker(Node *node, x_filler_context2 *ctx)
 		GapFillColumnState gfstate;
 		// add_new_column_to_pathtarget(ctx->aggregate_cols, node);
 		if(IsA(node, Var))
-			lappend_int(ctx->subpath_column_types, GROUP_COLUMN);
+			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, GROUP_COLUMN);
+			else 
+			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, NULL_COLUMN);
 		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 		return node;
 	}
@@ -382,7 +384,7 @@ x_walker(Node *node, x_filler_context2 *ctx)
 			Assert(ctx->sortgroupref>0);
 
 			// use aggregate to compute the normal gapfill groups
-			lappend_int(ctx->subpath_column_types, TIME_COLUMN);
+			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, TIME_COLUMN);
 			add_column_to_pathtarget(ctx->aggregate_cols, copyObject(expr), ctx->sortgroupref);
 			// make an extra nesting of gapfill() to have a separate version for CustomScan to process
 			// FIXME: a shallow copy would suffice			
@@ -400,9 +402,9 @@ x_walker(Node *node, x_filler_context2 *ctx)
 			// 						 0);
 			
 			if(is_locf_function_call(expr)) {
-			lappend_int(ctx->subpath_column_types, LOCF_COLUMN);
+			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, LOCF_COLUMN);
 			}else {
-			lappend_int(ctx->subpath_column_types, INTERPOLATE_COLUMN);
+			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, INTERPOLATE_COLUMN);
 			}
 			add_column_to_pathtarget(ctx->aggregate_cols,
 									 linitial(expr->args),
@@ -449,9 +451,9 @@ gapfill_build_pathtarget2(PathTarget *pt_upper, 	struct x_filler_context2*ctx)
 
 		Expr *new_expr=x_walker(expr,ctx);
 		if(IsA(expr, FuncExpr) && is_gapfill_function_call(expr)) {
-			lappend_int(ctx->gapfill_column_types, TIME_COLUMN);
+			ctx->gapfill_column_types=lappend_int(ctx->gapfill_column_types, TIME_COLUMN);
 		}else {
-			lappend_int(ctx->gapfill_column_types, DERIVED_COLUMN);
+			ctx->gapfill_column_types=lappend_int(ctx->gapfill_column_types, DERIVED_COLUMN);
 		}
 		
 		add_column_to_pathtarget(ctx->project_cols, new_expr, sortgroupref);
@@ -508,6 +510,9 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 	// ctx.gapfill_column_types=NULL;
 
 	gapfill_build_pathtarget2(root->upper_targets[UPPERREL_FINAL], &ctx);
+
+	path->gapfill_column_types=ctx.gapfill_column_types;
+	path->subpath_column_types=ctx.subpath_column_types;
 
 	if (!gapfill_correct_order(root, subpath, func))
 	{

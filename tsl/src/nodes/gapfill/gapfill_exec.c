@@ -66,7 +66,7 @@ static bool gapfill_state_is_new_group(GapFillState *state, TupleTableSlot *slot
 static void gapfill_state_set_next(GapFillState *state, TupleTableSlot *subslot);
 static TupleTableSlot *gapfill_state_return_subplan_slot(GapFillState *state);
 static TupleTableSlot *gapfill_fetch_next_tuple(GapFillState *state);
-static void gapfill_state_initialize_columns(GapFillState *state);
+static void gapfill_state_initialize_columns(GapFillState *state,List*);
 static GapFillColumnState *gapfill_column_state_create(GapFillColumnType ctype, Oid typeid);
 static bool gapfill_is_group_column(GapFillState *state, TargetEntry *tle);
 static Node *gapfill_aggref_mutator(Node *node, void *context);
@@ -775,7 +775,7 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 		state->gapfill_end = gapfill_datum_get_internal(arg_value, func->funcresulttype);
 	}
 
-	gapfill_state_initialize_columns(state);
+	gapfill_state_initialize_columns(state,lfifth(cscan->custom_private));
 
 	/*
 	 * Build ProjectionInfo that will be used for gap filled tuples only.
@@ -787,15 +787,15 @@ gapfill_begin(CustomScanState *node, EState *estate, int eflags)
 	 * projection for gapfilled tuples so expressions like COALESCE work
 	 * correctly for gapfilled tuples.
 	 */
-	for (i = 0; i < state->ncolumns; i++)
-	{
-		if (state->columns[i]->ctype == NULL_COLUMN)
-		{
-			entry = copyObject(list_nth(cscan->custom_scan_tlist, i));
-			entry = gapfill_aggref_mutator(entry, NULL);
-			lfirst(list_nth_cell(targetlist, i)) = entry;
-		}
-	}
+	// for (i = 0; i < state->ncolumns; i++)
+	// {
+	// 	if (state->columns[i]->ctype == NULL_COLUMN)
+	// 	{
+	// 		entry = copyObject(list_nth(cscan->custom_scan_tlist, i));
+	// 		entry = gapfill_aggref_mutator(entry, NULL);
+	// 		lfirst(list_nth_cell(targetlist, i)) = entry;
+	// 	}
+	// }
 
 	state->pi = ExecBuildProjectionInfo(targetlist,
 										state->csstate.ss.ps.ps_ExprContext,
@@ -953,11 +953,11 @@ gapfill_state_reset_group(GapFillState *state, TupleTableSlot *slot)
 static TupleTableSlot *
 gapfill_state_gaptuple_create(GapFillState *state, int64 time)
 {
-	// TupleDesc subdesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
-	// TupleTableSlot *slot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
-	// ExecCopySlot(slot, state->subslot);
+	TupleDesc subdesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
+	TupleTableSlot *slot = MakeSingleTupleTableSlot(subdesc, &TTSOpsVirtual);
+	ExecCopySlot(slot, state->subslot);
 
-	TupleTableSlot *slot = state->scanslot;
+	// TupleTableSlot *slot = state->scanslot;
 
 	GapFillColumnStateUnion column;
 	int i;
@@ -1103,15 +1103,18 @@ gapfill_state_return_subplan_slot(GapFillState *state)
 		}
 	}
 
-	if (node->ss.ps.ps_ProjInfo)
-	{
-		ExprContext *econtext = node->ss.ps.ps_ExprContext;
-		ResetExprContext(econtext);
-		econtext->ecxt_scantuple = state->subslot;
-		return ExecProject(node->ss.ps.ps_ProjInfo);
-	}
+	// if (node->ss.ps.ps_ProjInfo)
+	// {
+	// 	ExprContext *econtext = node->ss.ps.ps_ExprContext;
+	// 	ResetExprContext(econtext);
+	// 	econtext->ecxt_scantuple = state->subslot;
+	// 	return ExecProject(node->ss.ps.ps_ProjInfo);
+	// }
+	ResetExprContext(state->pi->pi_exprContext);
+	state->pi->pi_exprContext->ecxt_scantuple = state->subslot;
+	return ExecProject(state->pi);
 
-	return state->subslot;
+	// return state->subslot;
 }
 
 static void
@@ -1174,10 +1177,10 @@ gapfill_fetch_next_tuple(GapFillState *state)
  * Initialize column meta data
  */
 static void
-gapfill_state_initialize_columns(GapFillState *state)
+gapfill_state_initialize_columns(GapFillState *state,List*subpath_column_types)
 {
-	// TupleDesc tupledesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
-	TupleDesc tupledesc = state->csstate.ss.ps.ps_ResultTupleSlot->tts_tupleDescriptor;
+	TupleDesc tupledesc = ((PlanState*)linitial(state->csstate.custom_ps))->ps_ResultTupleDesc;
+	// TupleDesc tupledesc = state->csstate.ss.ps.ps_ResultTupleSlot->tts_tupleDescriptor;
 	CustomScan *cscan = castNode(CustomScan, state->csstate.ss.ps.plan);
 	TargetEntry *tle;
 	Expr *expr;
@@ -1186,6 +1189,55 @@ gapfill_state_initialize_columns(GapFillState *state)
 	state->ncolumns = tupledesc->natts;
 	state->columns = palloc(state->ncolumns * sizeof(GapFillColumnState *));
 
+	for (i = 0; i < state->ncolumns; i++){
+		GapFillColumnType type = list_nth_int(subpath_column_types,i);
+		switch(type) {
+			case TIME_COLUMN:
+				state->columns[i] =
+					gapfill_column_state_create(TIME_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+				state->time_index = i;
+				break;
+			case GROUP_COLUMN:
+			state->columns[i] =
+				gapfill_column_state_create(GROUP_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+			state->multigroup = true;
+			state->groups_initialized = false;
+break;
+// case LOCF_COLUMN:
+// 				state->columns[i] =
+// 					gapfill_column_state_create(LOCF_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+// 				gapfill_locf_initialize((GapFillLocfColumnState *) state->columns[i],
+// 										state,
+// 										(FuncExpr *) expr);
+// 										break;
+// 										case INTERPOLATE_COLUMN:
+
+// 				state->columns[i] =
+// 					gapfill_column_state_create(LOCF_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+// 				gapfill_locf_initialize((GapFillLocfColumnState *) state->columns[i],
+// 										state,
+// 										(FuncExpr *) expr);
+// break;
+case DERIVED_COLUMN:
+			state->columns[i] =
+				gapfill_column_state_create(DERIVED_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+			state->multigroup = true;
+			state->groups_initialized = false;
+			continue;
+		break;
+		case NULL_COLUMN:
+
+		/* column with no special action from gap fill node */
+		state->columns[i] =
+			gapfill_column_state_create(NULL_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+break;
+default:
+Assert(false);
+		}
+	}
+
+
+if(false)
 	for (i = 0; i < state->ncolumns; i++)
 	{//scan.plan.targetlist
 		tle = list_nth(cscan->scan.plan.targetlist, i);

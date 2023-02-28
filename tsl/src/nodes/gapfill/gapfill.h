@@ -24,6 +24,8 @@ typedef struct GapFillPath
 {
 	CustomPath cpath;
 	FuncExpr *func; /* time_bucket_gapfill function call */
+	List*	subpath_column_types;
+	List*	gapfill_column_types;
 } GapFillPath;
 
 #endif /* TIMESCALEDB_TSL_NODES_GAPFILL_H */
