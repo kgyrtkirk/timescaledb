@@ -49,15 +49,6 @@ is_gapfill_function_call(FuncExpr *call)
 }
 
 /*
- * FuncExpr is locf or interpolate function call
- */
-static inline bool
-is_marker_function_call(FuncExpr *call)
-{
-	return is_locf_function_call(call) || is_interpolate_function_call(call);
-}
-
-/*
  * FuncExpr is locf function call
  */
 static inline bool
@@ -74,6 +65,15 @@ is_interpolate_function_call(FuncExpr *call)
 {
 	char *func_name = get_func_name(call->funcid);
 	return strncmp(func_name, GAPFILL_INTERPOLATE_FUNCTION, NAMEDATALEN) == 0;
+}
+
+/*
+ * FuncExpr is locf or interpolate function call
+ */
+static inline bool
+is_marker_function_call(FuncExpr *call)
+{
+	return is_locf_function_call(call) || is_interpolate_function_call(call);
 }
 
 /*
