@@ -368,8 +368,6 @@ x_walker(Node *node, x_filler_context2 *ctx)
 	{
 		GapFillColumnState gfstate;
 		// add_new_column_to_pathtarget(ctx->aggregate_cols, node);
-		if(IsA(node, Var))
-			lappend_int(ctx->subpath_column_types, GROUP_COLUMN);
 		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 		return node;
 	}
@@ -395,11 +393,7 @@ x_walker(Node *node, x_filler_context2 *ctx)
 			// 						 linitial(expr->args),
 			// 						 0);
 			
-			if(is_locf_function_call(expr)) {
 			lappend_int(ctx->subpath_column_types, LOCF_COLUMN);
-			}else {
-			lappend_int(ctx->subpath_column_types, INTERPOLATE_COLUMN);
-			}
 			add_column_to_pathtarget(ctx->aggregate_cols,
 									 linitial(expr->args),
 									 ctx->sortgroupref);
