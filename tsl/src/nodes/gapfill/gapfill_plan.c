@@ -364,6 +364,7 @@ x_walker(Node *node, x_filler_context2 *ctx)
 {
 	if (node == NULL)
 		return NULL;
+	// FIXME: real group columns?!
 	if (IsA(node, Var) || IsA(node, Aggref))
 	{
 		GapFillColumnState gfstate;
@@ -377,6 +378,9 @@ x_walker(Node *node, x_filler_context2 *ctx)
 		FuncExpr *expr=castNode(FuncExpr, node);
 		if(is_gapfill_function_call(expr)) {
 			
+			// must be toplevel; and sort+group
+			Assert(ctx->sortgroupref>0);
+
 			// use aggregate to compute the normal gapfill groups
 			lappend_int(ctx->subpath_column_types, TIME_COLUMN);
 			add_column_to_pathtarget(ctx->aggregate_cols, copyObject(expr), ctx->sortgroupref);
@@ -425,19 +429,14 @@ x_walker(Node *node, x_filler_context2 *ctx)
 */
 
 static void
-gapfill_build_pathtarget2(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *pt_subpath)
+// gapfill_build_pathtarget2(PathTarget *pt_upper, PathTarget *pt_path, PathTarget *pt_subpath)
+gapfill_build_pathtarget2(PathTarget *pt_upper, 	struct x_filler_context2*ctx)
 {
 	ListCell *lc;
 	int i = -1;
 
 	// create a copy which will be altered to become the new target
 	// pt_upper=copy_pathtarget(pt_upper);
-
-	struct x_filler_context2 ctx;
-	ctx.project_cols = pt_path;
-	ctx.aggregate_cols = pt_subpath;
-	ctx.subpath_column_types=NULL;
-	ctx.gapfill_column_types=NULL;
 
 	foreach (lc, pt_upper->exprs)
 	{
@@ -446,13 +445,19 @@ gapfill_build_pathtarget2(PathTarget *pt_upper, PathTarget *pt_path, PathTarget 
 		Expr *expr = lfirst(lc);
 		Index	   sortgroupref=pt_upper->sortgrouprefs[i];
 
-		ctx.sortgroupref=sortgroupref;
+		ctx->sortgroupref=sortgroupref;
 
-		Expr *new_expr=x_walker(expr,&ctx);
+		Expr *new_expr=x_walker(expr,ctx);
+		if(IsA(expr, FuncExpr) && is_gapfill_function_call(expr)) {
+			lappend_int(ctx->gapfill_column_types, TIME_COLUMN);
+		}else {
+			lappend_int(ctx->gapfill_column_types, DERIVED_COLUMN);
+		}
 		
-		add_column_to_pathtarget(pt_path, new_expr, sortgroupref);
+		add_column_to_pathtarget(ctx->project_cols, new_expr, sortgroupref);
 
 	}
+	
 }
 
 /*
@@ -492,9 +497,23 @@ gapfill_path_create(PlannerInfo *root, Path *subpath, FuncExpr *func)
 
 	path->cpath.path.pathtarget = create_empty_pathtarget();
 	subpath->pathtarget = create_empty_pathtarget();
+
+	struct x_filler_context2 ctx = {
+		.aggregate_cols = subpath->pathtarget,
+		.project_cols=path->cpath.path.pathtarget,
+		.subpath_column_types=NULL,
+		.gapfill_column_types=NULL,
+
+	};
+	// ctx.project_cols = pt_path;
+	// ctx.aggregate_cols = pt_subpath;
+	// ctx.subpath_column_types=NULL;
+	// ctx.gapfill_column_types=NULL;
+
+
+
 	gapfill_build_pathtarget2(root->upper_targets[UPPERREL_FINAL],
-							 path->cpath.path.pathtarget,
-							 subpath->pathtarget);
+&ctx);
 
 
 	if (!gapfill_correct_order(root, subpath, func))
