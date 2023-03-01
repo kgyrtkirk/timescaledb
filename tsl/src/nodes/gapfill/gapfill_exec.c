@@ -1190,6 +1190,10 @@ gapfill_state_initialize_columns(GapFillState *state,List*subpath_column_types)
 	state->columns = palloc(state->ncolumns * sizeof(GapFillColumnState *));
 
 	for (i = 0; i < state->ncolumns; i++){
+		tle = list_nth(cscan->custom_scan_tlist, i);
+		 expr = tle->expr;
+
+
 		GapFillColumnType type = list_nth_int(subpath_column_types,i);
 		switch(type) {
 			case TIME_COLUMN:
@@ -1203,21 +1207,22 @@ gapfill_state_initialize_columns(GapFillState *state,List*subpath_column_types)
 			state->multigroup = true;
 			state->groups_initialized = false;
 break;
-// case LOCF_COLUMN:
-// 				state->columns[i] =
-// 					gapfill_column_state_create(LOCF_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
-// 				gapfill_locf_initialize((GapFillLocfColumnState *) state->columns[i],
-// 										state,
-// 										(FuncExpr *) expr);
-// 										break;
-// 										case INTERPOLATE_COLUMN:
+case LOCF_COLUMN:
+				state->columns[i] =
+					gapfill_column_state_create(LOCF_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
+				gapfill_locf_initialize((GapFillLocfColumnState *) state->columns[i],
+										state,
+										(FuncExpr *) expr);
+										break;
+										case INTERPOLATE_COLUMN:
 
-// 				state->columns[i] =
-// 					gapfill_column_state_create(LOCF_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);
-// 				gapfill_locf_initialize((GapFillLocfColumnState *) state->columns[i],
-// 										state,
-// 										(FuncExpr *) expr);
-// break;
+				state->columns[i] =
+					gapfill_column_state_create(INTERPOLATE_COLUMN,
+												TupleDescAttr(tupledesc, i)->atttypid);
+				gapfill_interpolate_initialize((GapFillInterpolateColumnState *) state->columns[i],
+											   state,
+											   (FuncExpr *) expr);
+											   break;
 case DERIVED_COLUMN:
 			state->columns[i] =
 				gapfill_column_state_create(DERIVED_COLUMN, TupleDescAttr(tupledesc, i)->atttypid);

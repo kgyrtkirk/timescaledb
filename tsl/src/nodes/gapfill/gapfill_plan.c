@@ -371,7 +371,7 @@ x_walker(Node *node, x_filler_context2 *ctx)
 		// add_new_column_to_pathtarget(ctx->aggregate_cols, node);
 		if(IsA(node, Var))
 			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, GROUP_COLUMN);
-			else 
+		else 
 			ctx->subpath_column_types=lappend_int(ctx->subpath_column_types, NULL_COLUMN);
 		add_column_to_pathtarget(ctx->aggregate_cols, node, ctx->sortgroupref);
 		return node;
