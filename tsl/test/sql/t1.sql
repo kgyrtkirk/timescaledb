@@ -45,26 +45,6 @@ VALUES
 ('2022-01-12 00:00:00-00',1.0);
 
 
--- CREATE FUNCTION md5_agg_sfunc(text, anyelement) 
---        RETURNS text
---        LANGUAGE sql
--- AS
--- $$
---   SELECT md5($1 || $2::text)
--- $$;
--- CREATE  AGGREGATE md5_agg (ORDER BY anyelement)
--- (
---   STYPE = text,
---   SFUNC = md5_agg_sfunc,
---   INITCOND = ''
--- );
-
-
--- \o :current_mode
--- select * from conditions order by t,temperature;
--- \o
-
--- :SAVE_STATE
 
 \if :{?last_mode}
 select :'current_mode' || '<>' || :'last_mode';
