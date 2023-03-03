@@ -1,18 +1,18 @@
 \set ON_ERROR_STOP 1
 
 \set table_name readings
-\set current_mode devices_1
+\set source_schema devices_1
 
-select count(1) as schema_exists from information_schema.schemata where schema_name = :'current_mode' \gset
+select count(1) as schema_exists from information_schema.schemata where schema_name = :'source_schema' \gset
 select :'schema_exists';
 \if :schema_exists
 -- already loaded
 \else
 begin;
-    \set current_mode devices_load
-    drop schema if exists :current_mode cascade;
-    create schema :current_mode;
-    set search_path=:current_mode,public;
+    \set source_schema devices_load
+    drop schema if exists :source_schema cascade;
+    create schema :source_schema;
+    set search_path=:source_schema,public;
     DROP TABLE IF EXISTS "device_info";
     CREATE TABLE "device_info"(
         device_id     TEXT,
@@ -44,6 +44,6 @@ begin;
     SELECT create_hypertable('readings', 'time', chunk_time_interval => 86400000000);
     \COPY readings FROM devices_1.csv CSV
     \COPY device_info FROM devices_small_device_info.csv CSV
-    alter schema :current_mode rename to devices_1;
+    alter schema :source_schema rename to devices_1;
 commit;
 \endif

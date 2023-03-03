@@ -13,6 +13,8 @@ set search_path=:current_mode,public;
 
 \i load.sql
 \i append.sql
+\i delete.sql
+
 
 
 
