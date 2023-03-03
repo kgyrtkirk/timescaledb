@@ -1,5 +1,6 @@
-
 \unset last_mode
+
+
 
 \set current_mode normal
 \ir d_load_int.sql
