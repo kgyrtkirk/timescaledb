@@ -42,8 +42,8 @@ explain analyze
 
 explain analyze
 with
-    c as (select count(1) over (partition by c),* from :current_mode.readings c),
-    l as (select count(1) over (partition by c),* from :last_mode.readings c)
+    c as (select count(1) over (partition by time,c),* from :current_mode.readings c where time < '2016-11-15 16:00:00+00'),
+    l as (select count(1) over (partition by time,c),* from :last_mode.readings c where time < '2016-11-15 16:00:00+00')
 (
         select * from c
     except
