@@ -167,6 +167,12 @@ ALTER TABLE test_defaults ADD COLUMN c1 int;
 ALTER TABLE test_defaults ADD COLUMN c2 int NOT NULL DEFAULT 42;
 SELECT * FROM test_defaults ORDER BY 1,2;
 
+select decompress_chunk(show_chunks('test_defaults'),true);
+SELECT * FROM test_defaults ORDER BY 1,2;
+
+select compress_chunk(show_chunks('test_defaults'));
+
+
 -- try insert into compressed and recompress
 INSERT INTO test_defaults SELECT '2000-01-01', 2;
 SELECT * FROM test_defaults ORDER BY 1,2;
