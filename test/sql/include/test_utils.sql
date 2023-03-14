@@ -23,7 +23,7 @@ CREATE OR REPLACE FUNCTION assert_equal(
 $BODY$
 BEGIN
     IF (val1 = val2) IS NOT TRUE THEN
-        RAISE 'Assert failed';
+        RAISE 'Assert failed: % = %',val1,val2;
     END IF;
 END
 $BODY$;
