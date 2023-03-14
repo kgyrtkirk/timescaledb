@@ -1053,10 +1053,46 @@ SELECT * FROM test_defaults ORDER BY 1,2;
  Mon Jan 01 00:00:00 2001 PST |         1 |    | 42
 (3 rows)
 
+-- timescale/timescaledb#5412
+ALTER TABLE test_defaults ADD COLUMN c3 int NOT NULL DEFAULT 43;
+--SELECT assert_equal(c3,43) FROM test_defaults;
+select decompress_chunk(show_chunks('test_defaults'),true);
+psql:include/compression_alter.sql:180: NOTICE:  chunk "_hyper_14_90_chunk" is not compressed
+             decompress_chunk             
+------------------------------------------
+ _timescaledb_internal._hyper_14_89_chunk
+ 
+(2 rows)
+
+SELECT * FROM test_defaults ORDER BY 1,2;
+             time             | device_id | c1 | c2 | c3 
+------------------------------+-----------+----+----+----
+ Sat Jan 01 00:00:00 2000 PST |         1 |    |    |   
+ Sat Jan 01 00:00:00 2000 PST |         2 |    | 42 |   
+ Mon Jan 01 00:00:00 2001 PST |         1 |    | 42 | 43
+(3 rows)
+
+--SELECT assert_equal(c2,42) FROM test_defaults ORDER BY 1,2;
+--update test_defaults set c3 = null;
+select compress_chunk(show_chunks('test_defaults'));
+              compress_chunk              
+------------------------------------------
+ _timescaledb_internal._hyper_14_89_chunk
+ _timescaledb_internal._hyper_14_90_chunk
+(2 rows)
+
+SELECT * FROM test_defaults ORDER BY 1,2;
+             time             | device_id | c1 | c2 | c3 
+------------------------------+-----------+----+----+----
+ Sat Jan 01 00:00:00 2000 PST |         1 |    | 42 | 43
+ Sat Jan 01 00:00:00 2000 PST |         2 |    | 42 | 43
+ Mon Jan 01 00:00:00 2001 PST |         1 |    | 42 | 43
+(3 rows)
+
 -- test dropping columns from compressed
 CREATE TABLE test_drop(f1 text, f2 text, f3 text, time timestamptz, device int, o1 text, o2 text);
 SELECT create_hypertable('test_drop','time');
-psql:include/compression_alter.sql:178: NOTICE:  adding not-null constraint to column "time"
+psql:include/compression_alter.sql:191: NOTICE:  adding not-null constraint to column "time"
     create_hypertable    
 -------------------------
  (16,public,test_drop,t)
@@ -1066,13 +1102,13 @@ ALTER TABLE test_drop SET (timescaledb.compress,timescaledb.compress_segmentby='
 -- dropping segmentby or orderby columns will fail
 \set ON_ERROR_STOP 0
 ALTER TABLE test_drop DROP COLUMN time;
-psql:include/compression_alter.sql:183: ERROR:  cannot drop column named in partition key
+psql:include/compression_alter.sql:196: ERROR:  cannot drop column named in partition key
 ALTER TABLE test_drop DROP COLUMN o1;
-psql:include/compression_alter.sql:184: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
+psql:include/compression_alter.sql:197: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
 ALTER TABLE test_drop DROP COLUMN o2;
-psql:include/compression_alter.sql:185: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
+psql:include/compression_alter.sql:198: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
 ALTER TABLE test_drop DROP COLUMN device;
-psql:include/compression_alter.sql:186: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
+psql:include/compression_alter.sql:199: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
 \set ON_ERROR_STOP 1
 -- switch to WARNING only to suppress compress_chunk NOTICEs
 SET client_min_messages TO WARNING;
@@ -1089,7 +1125,7 @@ ALTER TABLE test_drop DROP COLUMN f2;
 -- test non-existant column
 \set ON_ERROR_STOP 0
 ALTER TABLE test_drop DROP COLUMN f10;
-psql:include/compression_alter.sql:200: ERROR:  column "f10" of relation "test_drop" does not exist
+psql:include/compression_alter.sql:213: ERROR:  column "f10" of relation "test_drop" does not exist
 \set ON_ERROR_STOP 1
 ALTER TABLE test_drop DROP COLUMN IF EXISTS f10;
 INSERT INTO test_drop SELECT NULL,'2001-01-01',2,'o1','o2';
@@ -1171,8 +1207,8 @@ WHERE reltablespace in
   ( SELECT oid from pg_tablespace WHERE spcname = 'tablespace2') ORDER BY 1;
                relname               
 -------------------------------------
- _hyper_18_103_chunk
- _hyper_18_103_chunk_test2_timec_idx
+ _hyper_18_105_chunk
+ _hyper_18_105_chunk_test2_timec_idx
  test2
 (3 rows)
 
@@ -1183,7 +1219,7 @@ SELECT decompress_chunk(ch) INTO decompressed_chunks FROM show_chunks('test2') c
 SELECT compress_chunk(ch) FROM show_chunks('test2') ch;
               compress_chunk               
 -------------------------------------------
- _timescaledb_internal._hyper_18_103_chunk
+ _timescaledb_internal._hyper_18_105_chunk
 (1 row)
 
 -- the chunk, compressed chunk + index + toast tables are in tablespace2 now .
@@ -1199,7 +1235,7 @@ WHERE reltablespace in
 (1 row)
 
 DROP TABLE test2 CASCADE;
-NOTICE:  drop cascades to table _timescaledb_internal.compress_hyper_19_105_chunk
+NOTICE:  drop cascades to table _timescaledb_internal.compress_hyper_19_107_chunk
 DROP TABLESPACE tablespace2;
 -- Create a table with a compressed table and then delete the
 -- compressed table and see that the drop of the hypertable does not
