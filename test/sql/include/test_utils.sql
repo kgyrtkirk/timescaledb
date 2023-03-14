@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION assert_true(
  RETURNS VOID LANGUAGE PLPGSQL IMMUTABLE AS
 $BODY$
 BEGIN
-    IF !val THEN
+    IF val IS NOT TRUE THEN
         RAISE 'Assert failed';
     END IF;
 END
@@ -22,7 +22,7 @@ CREATE OR REPLACE FUNCTION assert_equal(
  RETURNS VOID LANGUAGE PLPGSQL IMMUTABLE AS
 $BODY$
 BEGIN
-    IF val1 != val2 THEN
+    IF (val1 = val2) IS NOT TRUE THEN
         RAISE 'Assert failed';
     END IF;
 END

@@ -3,7 +3,7 @@
 -- LICENSE-TIMESCALE for a copy of the license.
 
 \ir compression_utils.sql
-
+\ir ../../../../test/sql/include/test_utils.sql
 CREATE TABLE test1 ("Time" timestamptz, intcol integer, bntcol bigint, txtcol text);
 SELECT table_name from create_hypertable('test1', 'Time', chunk_time_interval=> INTERVAL '1 day');
 
@@ -175,13 +175,15 @@ SELECT * FROM test_defaults ORDER BY 1,2;
 
 -- timescale/timescaledb#5412
 ALTER TABLE test_defaults ADD COLUMN c3 int NOT NULL DEFAULT 43;
---SELECT assert_equal(c3,43) FROM test_defaults;
+SELECT assert_equal(c3,431) FROM test_defaults;
 
 select decompress_chunk(show_chunks('test_defaults'),true);
+SELECT assert_equal(c3,43) FROM test_defaults;
 SELECT * FROM test_defaults ORDER BY 1,2;
 --SELECT assert_equal(c2,42) FROM test_defaults ORDER BY 1,2;
 --update test_defaults set c3 = null;
 select compress_chunk(show_chunks('test_defaults'));
+SELECT assert_equal(c3,43) FROM test_defaults;
 SELECT * FROM test_defaults ORDER BY 1,2;
 
 
