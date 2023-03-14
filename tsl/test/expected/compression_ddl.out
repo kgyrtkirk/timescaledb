@@ -754,7 +754,7 @@ CREATE OR REPLACE FUNCTION assert_true(
  RETURNS VOID LANGUAGE PLPGSQL IMMUTABLE AS
 $BODY$
 BEGIN
-    IF !val THEN
+    IF val IS NOT TRUE THEN
         RAISE 'Assert failed';
     END IF;
 END
@@ -766,8 +766,8 @@ CREATE OR REPLACE FUNCTION assert_equal(
  RETURNS VOID LANGUAGE PLPGSQL IMMUTABLE AS
 $BODY$
 BEGIN
-    IF val1 != val2 THEN
-        RAISE 'Assert failed';
+    IF (val1 = val2) IS NOT TRUE THEN
+        RAISE 'Assert failed: % = %',val1,val2;
     END IF;
 END
 $BODY$;
@@ -1082,7 +1082,14 @@ SELECT * FROM test_defaults ORDER BY 1,2;
 
 -- timescale/timescaledb#5412
 ALTER TABLE test_defaults ADD COLUMN c3 int NOT NULL DEFAULT 43;
---SELECT assert_equal(c3,43) FROM test_defaults;
+SELECT assert_equal(c3,43) FROM test_defaults;
+ assert_equal 
+--------------
+ 
+ 
+ 
+(3 rows)
+
 select decompress_chunk(show_chunks('test_defaults'),true);
 psql:include/compression_alter.sql:180: NOTICE:  chunk "_hyper_14_90_chunk" is not compressed
              decompress_chunk             
@@ -1091,11 +1098,19 @@ psql:include/compression_alter.sql:180: NOTICE:  chunk "_hyper_14_90_chunk" is n
  
 (2 rows)
 
+SELECT assert_equal(c3,43) FROM test_defaults;
+ assert_equal 
+--------------
+ 
+ 
+ 
+(3 rows)
+
 SELECT * FROM test_defaults ORDER BY 1,2;
              time             | device_id | c1 | c2 | c3 
 ------------------------------+-----------+----+----+----
- Sat Jan 01 00:00:00 2000 PST |         1 |    |    |   
- Sat Jan 01 00:00:00 2000 PST |         2 |    | 42 |   
+ Sat Jan 01 00:00:00 2000 PST |         1 |    | 42 | 43
+ Sat Jan 01 00:00:00 2000 PST |         2 |    | 42 | 43
  Mon Jan 01 00:00:00 2001 PST |         1 |    | 42 | 43
 (3 rows)
 
@@ -1108,6 +1123,14 @@ select compress_chunk(show_chunks('test_defaults'));
  _timescaledb_internal._hyper_14_90_chunk
 (2 rows)
 
+SELECT assert_equal(c3,43) FROM test_defaults;
+ assert_equal 
+--------------
+ 
+ 
+ 
+(3 rows)
+
 SELECT * FROM test_defaults ORDER BY 1,2;
              time             | device_id | c1 | c2 | c3 
 ------------------------------+-----------+----+----+----
@@ -1119,7 +1142,7 @@ SELECT * FROM test_defaults ORDER BY 1,2;
 -- test dropping columns from compressed
 CREATE TABLE test_drop(f1 text, f2 text, f3 text, time timestamptz, device int, o1 text, o2 text);
 SELECT create_hypertable('test_drop','time');
-psql:include/compression_alter.sql:191: NOTICE:  adding not-null constraint to column "time"
+psql:include/compression_alter.sql:193: NOTICE:  adding not-null constraint to column "time"
     create_hypertable    
 -------------------------
  (16,public,test_drop,t)
@@ -1129,13 +1152,13 @@ ALTER TABLE test_drop SET (timescaledb.compress,timescaledb.compress_segmentby='
 -- dropping segmentby or orderby columns will fail
 \set ON_ERROR_STOP 0
 ALTER TABLE test_drop DROP COLUMN time;
-psql:include/compression_alter.sql:196: ERROR:  cannot drop column named in partition key
+psql:include/compression_alter.sql:198: ERROR:  cannot drop column named in partition key
 ALTER TABLE test_drop DROP COLUMN o1;
-psql:include/compression_alter.sql:197: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
-ALTER TABLE test_drop DROP COLUMN o2;
-psql:include/compression_alter.sql:198: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
-ALTER TABLE test_drop DROP COLUMN device;
 psql:include/compression_alter.sql:199: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
+ALTER TABLE test_drop DROP COLUMN o2;
+psql:include/compression_alter.sql:200: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
+ALTER TABLE test_drop DROP COLUMN device;
+psql:include/compression_alter.sql:201: ERROR:  cannot drop orderby or segmentby column from a hypertable with compression enabled
 \set ON_ERROR_STOP 1
 -- switch to WARNING only to suppress compress_chunk NOTICEs
 SET client_min_messages TO WARNING;
@@ -1152,7 +1175,7 @@ ALTER TABLE test_drop DROP COLUMN f2;
 -- test non-existant column
 \set ON_ERROR_STOP 0
 ALTER TABLE test_drop DROP COLUMN f10;
-psql:include/compression_alter.sql:213: ERROR:  column "f10" of relation "test_drop" does not exist
+psql:include/compression_alter.sql:215: ERROR:  column "f10" of relation "test_drop" does not exist
 \set ON_ERROR_STOP 1
 ALTER TABLE test_drop DROP COLUMN IF EXISTS f10;
 INSERT INTO test_drop SELECT NULL,'2001-01-01',2,'o1','o2';
