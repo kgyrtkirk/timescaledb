@@ -167,17 +167,21 @@ ALTER TABLE test_defaults ADD COLUMN c1 int;
 ALTER TABLE test_defaults ADD COLUMN c2 int NOT NULL DEFAULT 42;
 SELECT * FROM test_defaults ORDER BY 1,2;
 
-select decompress_chunk(show_chunks('test_defaults'),true);
-SELECT * FROM test_defaults ORDER BY 1,2;
-
-select compress_chunk(show_chunks('test_defaults'));
-
-
 -- try insert into compressed and recompress
 INSERT INTO test_defaults SELECT '2000-01-01', 2;
 SELECT * FROM test_defaults ORDER BY 1,2;
 CALL recompress_all_chunks('test_defaults', 1, false);
 SELECT * FROM test_defaults ORDER BY 1,2;
+
+-- timescale/timescaledb#5412
+select decompress_chunk(show_chunks('test_defaults'),true);
+SELECT * FROM test_defaults ORDER BY 1,2;
+--SELECT assert_equal(c2,42) FROM test_defaults ORDER BY 1,2;
+--update test_defaults set c3 = null;
+select compress_chunk(show_chunks('test_defaults'));
+SELECT * FROM test_defaults ORDER BY 1,2;
+
+
 
 -- test dropping columns from compressed
 CREATE TABLE test_drop(f1 text, f2 text, f3 text, time timestamptz, device int, o1 text, o2 text);

@@ -1732,10 +1732,10 @@ row_decompressor_decompress_row(RowDecompressor *decompressor)
 		is_done = true;
 		for (int16 col = 0; col < decompressor->num_compressed_columns; col++)
 		{
-			bool col_is_done = per_compressed_col_get_data(decompressor->out_desc,
-															&decompressor->per_compressed_cols[col],
+			bool col_is_done = per_compressed_col_get_data(&decompressor->per_compressed_cols[col],
 														   decompressor->decompressed_datums,
-														   decompressor->decompressed_is_nulls);
+														   decompressor->decompressed_is_nulls,
+														   decompressor->out_desc);
 			is_done &= col_is_done;
 		}
 
