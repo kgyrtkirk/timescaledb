@@ -1525,7 +1525,8 @@ static void populate_per_compressed_columns_from_data(PerCompressedColumn *per_c
 													  bool *compressed_is_nulls);
 static void row_decompressor_decompress_row(RowDecompressor *row_decompressor);
 static bool per_compressed_col_get_data(PerCompressedColumn *per_compressed_col,
-										Datum *decompressed_datums, bool *decompressed_is_nulls,TupleDesc out_desc);
+										Datum *decompressed_datums, bool *decompressed_is_nulls,
+										TupleDesc out_desc);
 
 static RowDecompressor
 build_decompressor(Relation in_rel, Relation out_rel)
@@ -1747,7 +1748,7 @@ row_decompressor_decompress_row(RowDecompressor *decompressor)
 			HeapTuple decompressed_tuple = heap_form_tuple(decompressor->out_desc,
 														   decompressor->decompressed_datums,
 														   decompressor->decompressed_is_nulls);
-			// place#2
+
 			heap_insert(decompressor->out_rel,
 						decompressed_tuple,
 						decompressor->mycid,
@@ -1770,7 +1771,7 @@ row_decompressor_decompress_row(RowDecompressor *decompressor)
  */
 bool
 per_compressed_col_get_data(PerCompressedColumn *per_compressed_col, Datum *decompressed_datums,
-							bool *decompressed_is_nulls,TupleDesc out_desc)
+							bool *decompressed_is_nulls, TupleDesc out_desc)
 {
 	DecompressResult decompressed;
 	int16 decompressed_column_offset = per_compressed_col->decompressed_column_offset;
