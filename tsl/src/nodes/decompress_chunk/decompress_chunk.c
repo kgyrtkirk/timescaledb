@@ -612,26 +612,45 @@ ts_decompress_chunk_generate_paths(PlannerInfo *root, RelOptInfo *chunk_rel, Hyp
 		 * If this is a partially compressed chunk we have to combine data
 		 * from compressed and uncompressed chunk.
 		 */
-		if (ts_chunk_is_partial(chunk))
+		if (ts_chunk_is_partial(chunk)) {
+			Path *uncompressed_path1=uncompressed_path;
+
+			// if(list_length(path->pathkeys)>0)
+			// uncompressed_path1=
+			// 		create_sort_path(root, chunk_rel, uncompressed_path, path->pathkeys, -1);
 			path = (Path *) create_append_path_compat(root,
 													  chunk_rel,
-													  list_make2(path, uncompressed_path),
+													  list_make2(path, uncompressed_path1),
 													  NIL /* partial paths */,
 													  NIL /* pathkeys */,
-													  PATH_REQ_OUTER(uncompressed_path),
+													  PATH_REQ_OUTER(uncompressed_path1),
 													  0,
 													  false,
 													  false,
 													  path->rows + uncompressed_path->rows);
+		} else {
+			int                     presorted_keys;
+			bool	is_sorted = pathkeys_count_contained_in(root->sort_pathkeys,
+																path, &presorted_keys);
 
+			if(!is_sorted ) {
 
-        List *useful_pathkeys_list = get_useful_pathkeys_for_relation(root, chunk_rel, true);
+				List *useful_pathkeys_list = get_useful_pathkeys_for_relation(root, chunk_rel, true);
 
-        foreach(lc, useful_pathkeys_list) {
-			List       *useful_pathkeys = lfirst(lc);
-			DecompressChunkPath *dcpath = copy_decompress_chunk_path((DecompressChunkPath *) path);
-			SortPath* sortpath = create_sort_path(root, chunk_rel, &dcpath->cpath.path, useful_pathkeys, root->limit_tuples);
-			add_path(chunk_rel, &sortpath->path);
+				foreach(lc, useful_pathkeys_list) {
+					List       *useful_pathkeys = lfirst(lc);
+					DecompressChunkPath *dcpath = copy_decompress_chunk_path((DecompressChunkPath *) path);
+
+					if(!presorted_keys) {
+						SortPath* sortpath = create_sort_path(root, chunk_rel, &dcpath->cpath.path, useful_pathkeys, root->limit_tuples);
+						add_path(chunk_rel, &sortpath->path);
+					} else {
+
+						SortPath* sortpath = create_incremental_sort_path(root, chunk_rel, &dcpath->cpath.path, useful_pathkeys, presorted_keys, root->limit_tuples);
+						add_path(chunk_rel, &sortpath->path);
+					}
+				}
+			}
 		}
 
 		/* this has to go after the path is copied for the ordered path since path can get freed in

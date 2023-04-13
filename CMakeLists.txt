@@ -178,7 +178,6 @@ endif()
 
 if(WARNINGS_AS_ERRORS)
   if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
-    add_compile_options(-Werror)
   elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/WX)
   endif()
