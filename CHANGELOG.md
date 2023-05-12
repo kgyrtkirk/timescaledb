@@ -6,6 +6,15 @@ accidentally triggering the load of a previous DB version.**
 
 ## Unreleased
 
+## 2.11.0 (2023-05-12)
+
+This release includes these noteworthy features:
+* compressed hypertable enhancements:
+  * UPDATE/DELETE support
+  * ON CONFLICT DO UPDATE
+* Join support for hierarchical Continougs Aggregates
+* performance improvements
+
 **Features**
 * #5212 Allow pushdown of reference table joins
 * #5221 Improve Realtime Continuous Aggregate performance
