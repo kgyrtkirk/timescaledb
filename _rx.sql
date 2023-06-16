@@ -4,7 +4,8 @@ set parallel_tuple_cost =0;
 set parallel_setup_cost = 0;
 
 drop table if exists ct2;
-create table ct2 as select * from cluster_test  limit 2;
+create table ct2 (temp double precision);
+insert into ct2 values (11.0),(0.1);
 analyze ct2;
 
 set enable_seqscan =false;
@@ -58,6 +59,7 @@ insert into vx  values(1);
 select mat_hypertable_id as cht from _timescaledb_catalog.continuous_agg \gset
 
 select _timescaledb_internal.cagg_watermark_materialized(:cht);
+
 
 BEGIN TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;
 explain  analyze
