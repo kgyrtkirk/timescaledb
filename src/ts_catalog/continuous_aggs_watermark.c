@@ -246,6 +246,8 @@ ts_continuous_agg_watermark_materialized(PG_FUNCTION_ARGS)
 
 	cagg = ts_continuous_agg_find_by_mat_hypertable_id(mat_hypertable_id);
 
+	pg_usleep(1000000l);
+
 	if (NULL == cagg)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_PARAMETER_VALUE),

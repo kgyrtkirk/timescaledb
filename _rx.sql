@@ -63,11 +63,9 @@ BEGIN TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;
 explain  analyze
 SELECT device_id,count(1) FROM (
   SELECT * FROM main_table WHERE time < '2018-03-03 19:05:00'::text::timestamp
-                            and time < ('2018-03-03 19:05:00'::text::timestamp + fun() * (interval '1 day'))
                             and time < _timescaledb_internal.to_timestamp_without_timezone(_timescaledb_internal.cagg_watermark_materialized(:cht))
   UNION ALL
   SELECT * FROM main_table WHERE time > '2018-03-03 19:05:00'::text::timestamp
-                            and time > ('2018-03-03 19:05:00'::text::timestamp - fun() * (interval '1 day'))
                             and time > _timescaledb_internal.to_timestamp_without_timezone(_timescaledb_internal.cagg_watermark_materialized(:cht))
 ) q  join ct2 on (device_id > temp::text) group by device_id;
 
