@@ -801,7 +801,7 @@ constify_restrictinfos(PlannerInfo *root, List *restrictinfos)
 	}
 
 	elog(NOTICE, "constify");
-	elog_node_display(NOTICE,"constify",restrictinfos,true);
+	// elog_node_display(NOTICE,"constify",restrictinfos,true);
 	return restrictinfos;
 }
 
