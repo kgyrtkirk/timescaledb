@@ -61,7 +61,7 @@ select mat_hypertable_id as cht from _timescaledb_catalog.continuous_agg \gset
 select _timescaledb_internal.cagg_watermark_materialized(:cht);
 
 
-BEGIN TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;
+--BEGIN TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;
 explain  analyze
 SELECT device_id,count(1) FROM (
   SELECT * FROM main_table WHERE time < '2018-03-03 19:05:00'::text::timestamp
